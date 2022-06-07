@@ -54,16 +54,16 @@ class LoginViewAPITestCase(APITestCase):
         self.user = UserModel.objects.create_user(self.email, self.password)
 
     def test_login_creates_keys(self):
-        self.assertEqual(AuthToken.objects.count(), 0)
+        self.assertEqual(0, AuthToken.objects.count())
         url = reverse('knox_login')
 
         for _ in range(5):
             self.client.post(url, {'email': 'john.doe@example.com', 'password': '123456super'}, format='json')
-        self.assertEqual(AuthToken.objects.count(), 5)
+        self.assertEqual(5, AuthToken.objects.count())
         self.assertTrue(all(e.token_key for e in AuthToken.objects.all()))
 
     def test_login_returns_serialized_token(self):
-        self.assertEqual(AuthToken.objects.count(), 0)
+        self.assertEqual(0, AuthToken.objects.count())
         url = reverse('knox_login')
         response = self.client.post(url, {'email': 'john.doe@example.com', 'password': '123456super'}, format='json')
         self.assertEqual(status.HTTP_200_OK, response.status_code)
