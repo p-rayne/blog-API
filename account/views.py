@@ -1,6 +1,8 @@
 from django.contrib.auth import get_user_model, login
 from rest_framework import generics, permissions
 from knox.views import LoginView as KnoxLoginView
+from rest_framework.filters import OrderingFilter
+
 from account.serializer import UserSerializer, CustomAuthTokenSerializer
 
 UserModel = get_user_model()
@@ -10,6 +12,8 @@ class UserListCreateAPIView(generics.ListCreateAPIView):
     queryset = UserModel.objects.all()
     serializer_class = UserSerializer
     permission_classes = [permissions.AllowAny]
+    filter_backends = (OrderingFilter, )
+    ordering_fields = ('posts', )
 
 
 class LoginView(KnoxLoginView):

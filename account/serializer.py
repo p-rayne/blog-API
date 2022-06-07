@@ -3,14 +3,18 @@ from django.contrib.auth.password_validation import validate_password
 from rest_framework import serializers
 from rest_framework.exceptions import ValidationError
 
+from post.models import Post
+
 UserModel = get_user_model()
 
 
 class UserSerializer(serializers.ModelSerializer):
+    posts = serializers.SerializerMethodField(read_only=True)
+
     class Meta:
         model = UserModel
         fields = (
-            'id', 'email', 'password',
+            'id', 'email', 'password', 'posts'
         )
         extra_kwargs = {
             'password': {'write_only': True},
@@ -28,6 +32,9 @@ class UserSerializer(serializers.ModelSerializer):
         user.set_password(validated_data['password'])
         user.save()
         return user
+
+    def get_posts(self, user):
+        return user.posts.count()
 
 
 class CustomAuthTokenSerializer(serializers.Serializer):
