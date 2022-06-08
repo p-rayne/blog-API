@@ -9,12 +9,12 @@ UserModel = get_user_model()
 
 
 class UserSerializer(serializers.ModelSerializer):
-    posts = serializers.SerializerMethodField(read_only=True)
+    posts_count = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = UserModel
         fields = (
-            'id', 'email', 'password', 'posts'
+            'id', 'email', 'password', 'posts_count',
         )
         extra_kwargs = {
             'password': {'write_only': True},
@@ -32,9 +32,6 @@ class UserSerializer(serializers.ModelSerializer):
         user.set_password(validated_data['password'])
         user.save()
         return user
-
-    def get_posts(self, user):
-        return user.posts.count()
 
 
 class CustomAuthTokenSerializer(serializers.Serializer):

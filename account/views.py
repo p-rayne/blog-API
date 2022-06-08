@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model, login
+from django.db.models import Count
 from rest_framework import generics, permissions
 from knox.views import LoginView as KnoxLoginView
 from rest_framework.filters import OrderingFilter
@@ -9,11 +10,13 @@ UserModel = get_user_model()
 
 
 class UserListCreateAPIView(generics.ListCreateAPIView):
-    queryset = UserModel.objects.all()
+    queryset = UserModel.objects.all().annotate(
+        posts_count=Count('posts')
+    )
     serializer_class = UserSerializer
     permission_classes = [permissions.AllowAny]
     filter_backends = (OrderingFilter, )
-    ordering_fields = ('posts', )
+    ordering_fields = ('posts_count', )
 
 
 class LoginView(KnoxLoginView):

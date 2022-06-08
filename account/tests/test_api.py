@@ -32,7 +32,7 @@ class UserListCreateAPITestCase(APITestCase):
         response = self.client.post(url, data)
         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
         self.assertEqual(3, UserModel.objects.count())
-        self.assertEqual('jax.doe@example.com', UserModel.objects.latest('date_joined').email)
+        self.assertEqual('jax.doe@example.com', UserModel.objects.last().email)
 
     def test_email_invalid(self):
         url = reverse('users')
