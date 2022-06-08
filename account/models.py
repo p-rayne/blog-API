@@ -43,6 +43,3 @@ class CustomUser(AbstractUser):
     REQUIRED_FIELDS = []
 
     objects = CustomUserManager()
-
-    # def posts_count(self):
-    #     return self.posts.all().count()

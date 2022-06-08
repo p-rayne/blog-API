@@ -1,4 +1,5 @@
 from django.contrib.auth import get_user_model
+from django.db.models import Count
 from django.urls import reverse
 from knox.models import AuthToken
 from rest_framework import status
@@ -20,11 +21,30 @@ class UserListCreateAPITestCase(APITestCase):
         self.user2 = UserModel.objects.create_user(self.email2, self.password2)
 
     def test_get(self):
+        users = UserModel.objects.all().annotate(
+            posts_count=Count('posts')
+        )
         url = reverse('users')
         response = self.client.get(url)
-        serializer_data = UserSerializer([self.user, self.user2], many=True).data
+        serializer_data = UserSerializer(users, many=True).data
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual(serializer_data, response.data)
+
+    def test_posts_count(self):
+        users = UserModel.objects.all().annotate(
+            posts_count=Count('posts')
+        )
+        self.assertEqual(0, self.user.posts.count())
+        url = reverse('users')
+        self.user.posts.create(title='title for test post', text='text for test post')
+        response = self.client.get(url)
+        serializer_data = UserSerializer(users, many=True).data
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        self.assertEqual(serializer_data, response.data)
+        self.assertEqual(1, self.user.posts.count())
+
+    def test_posts_ordering(self):
+       pass
 
     def test_create_user(self):
         url = reverse('users')
@@ -40,9 +60,27 @@ class UserListCreateAPITestCase(APITestCase):
         response = self.client.post(url, data)
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
 
-    def test_password_invalid(self):
+    def test_email_empty(self):
         url = reverse('users')
-        data = {'email': 'john.doe@example.com', 'password': 12}
+        data = {'email': '', 'password': '123456super'}
+        response = self.client.post(url, data)
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+
+    def test_password_short(self):
+        url = reverse('users')
+        data = {'email': 'john.doe@example.com', 'password': 'abc12'}
+        response = self.client.post(url, data)
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+
+    def test_password_empty(self):
+        url = reverse('users')
+        data = {'email': 'john.doe@example.com', 'password': ''}
+        response = self.client.post(url, data)
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+
+    def test_password_numeric_only(self):
+        url = reverse('users')
+        data = {'email': 'john.doe@example.com', 'password': 123456789}
         response = self.client.post(url, data)
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
 
