@@ -1,3 +1,5 @@
+import json
+
 from django.contrib.auth import get_user_model
 from django.db.models import Count
 from django.urls import reverse
@@ -44,12 +46,14 @@ class UserListCreateAPITestCase(APITestCase):
         self.assertEqual(1, self.user.posts.count())
 
     def test_posts_ordering(self):
-       pass
+        pass
 
     def test_create_user(self):
         url = reverse('users')
         data = {'email': 'jax.doe@example.com', 'password': '123456super'}
-        response = self.client.post(url, data)
+        json_data = json.dumps(data)
+        response = self.client.post(url, data=json_data,
+                                    content_type='application/json')
         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
         self.assertEqual(3, UserModel.objects.count())
         self.assertEqual('jax.doe@example.com', UserModel.objects.last().email)
@@ -57,31 +61,41 @@ class UserListCreateAPITestCase(APITestCase):
     def test_email_invalid(self):
         url = reverse('users')
         data = {'email': 'invalid', 'password': '123456super'}
-        response = self.client.post(url, data)
+        json_data = json.dumps(data)
+        response = self.client.post(url, data=json_data,
+                                    content_type='application/json')
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
 
     def test_email_empty(self):
         url = reverse('users')
         data = {'email': '', 'password': '123456super'}
-        response = self.client.post(url, data)
+        json_data = json.dumps(data)
+        response = self.client.post(url, data=json_data,
+                                    content_type='application/json')
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
 
     def test_password_short(self):
         url = reverse('users')
         data = {'email': 'john.doe@example.com', 'password': 'abc12'}
-        response = self.client.post(url, data)
+        json_data = json.dumps(data)
+        response = self.client.post(url, data=json_data,
+                                    content_type='application/json')
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
 
     def test_password_empty(self):
         url = reverse('users')
         data = {'email': 'john.doe@example.com', 'password': ''}
-        response = self.client.post(url, data)
+        json_data = json.dumps(data)
+        response = self.client.post(url, data=json_data,
+                                    content_type='application/json')
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
 
     def test_password_numeric_only(self):
         url = reverse('users')
         data = {'email': 'john.doe@example.com', 'password': 123456789}
-        response = self.client.post(url, data)
+        json_data = json.dumps(data)
+        response = self.client.post(url, data=json_data,
+                                    content_type='application/json')
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
 
 
