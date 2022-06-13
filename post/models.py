@@ -1,4 +1,6 @@
+
 from django.db import models
+from rest_framework.exceptions import ValidationError
 
 from blogAPI import settings
 
@@ -30,6 +32,14 @@ class UserFollowing(models.Model):
         ]
 
         ordering = ["-created"]
+
+    def clean(self):
+        if self.user_id == self.following_user_id:
+            raise ValidationError({'error': "Users can't follow themselves"})
+
+    def save(self, *args, **kwargs):
+        self.full_clean(validate_unique=False)
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f'{self.user_id} follows {self.following_user_id}'

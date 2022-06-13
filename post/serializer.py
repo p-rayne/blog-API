@@ -10,7 +10,7 @@ class PostCreateSerializer(serializers.ModelSerializer):
 
 
 class FollowingSerializer(serializers.ModelSerializer):
-    following_user = serializers.EmailField(source='following_user_id.email')
+    following_user = serializers.EmailField(source='following_user_id.email', read_only=True)
 
     class Meta:
         model = UserFollowing

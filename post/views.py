@@ -1,7 +1,8 @@
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ObjectDoesNotExist
+from django.db import IntegrityError
 from rest_framework import generics, mixins
-from rest_framework.exceptions import NotFound
+from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 
@@ -45,7 +46,10 @@ class FollowListCreateAPIView(mixins.CreateModelMixin, mixins.ListModelMixin, mi
         return self.create(request, *args, **kwargs)
 
     def perform_create(self, serializer):
-        serializer.save(user_id=self.request.user)
+        try:
+            serializer.save(user_id=self.request.user)
+        except IntegrityError:
+            raise ValidationError({'error': 'You are already follow this user'})
 
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
