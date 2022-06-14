@@ -43,3 +43,9 @@ class UserFollowing(models.Model):
 
     def __str__(self):
         return f'{self.user_id} follows {self.following_user_id}'
+
+
+class UserFeed(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, primary_key=True)
+    feed = models.ManyToManyField(Post, blank=True)
+    date_update = models.DateTimeField(auto_now=True)
