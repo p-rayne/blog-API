@@ -8,6 +8,7 @@ from rest_framework.response import Response
 
 from post.models import Post, UserFollowing
 from post.serializer import PostCreateSerializer, FollowingSerializer
+from post.utils import feed_create_or_add
 
 UserModel = get_user_model()
 
@@ -43,6 +44,7 @@ class FollowListCreateAPIView(mixins.CreateModelMixin, mixins.ListModelMixin, mi
     queryset = UserFollowing.objects.all()
 
     def post(self, request, *args, **kwargs):
+        feed_create_or_add(self, request)
         return self.create(request, *args, **kwargs)
 
     def perform_create(self, serializer):
