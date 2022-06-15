@@ -3,8 +3,8 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError
 from rest_framework import generics, mixins
 from rest_framework.exceptions import NotFound, ValidationError
+from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework.response import Response
 
 from post.models import Post, UserFollowing, UserFeed
 from post.serializer import PostCreateSerializer, FollowingSerializer, PostsFeedSerializer
@@ -41,7 +41,9 @@ class FollowListCreateAPIView(mixins.CreateModelMixin, mixins.ListModelMixin, mi
                               generics.GenericAPIView):
     serializer_class = FollowingSerializer
     permission_classes = [IsAuthenticated]
-    queryset = UserFollowing.objects.all()
+
+    def get_queryset(self):
+        return UserFollowing.objects.filter(user_id=self.request.user)
 
     def post(self, request, *args, **kwargs):
         feed_create_or_add(self, request)
@@ -56,24 +58,20 @@ class FollowListCreateAPIView(mixins.CreateModelMixin, mixins.ListModelMixin, mi
     def get(self, request, *args, **kwargs):
         return self.list(request, *args, **kwargs)
 
-    def list(self, request, *args, **kwargs):
-        queryset = UserFollowing.objects.filter(user_id=self.request.user)
-
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-
-        serializer = self.get_serializer(queryset, many=True)
-        return Response(serializer.data)
-
     def delete(self, request, *args, **kwargs):
         return self.destroy(request, *args, **kwargs)
+
+
+class PostsFeedAPIListPagination(PageNumberPagination):
+    page_size = 10
+    page_size_query_param = 'page_size'
+    max_page_size = 100
 
 
 class PostsFeedListAPIView(mixins.ListModelMixin, generics.GenericAPIView):
     serializer_class = PostsFeedSerializer
     permission_classes = [IsAuthenticated]
+    pagination_class = PostsFeedAPIListPagination
 
     def get_queryset(self):
         user_feed = UserFeed.objects.get(user=self.request.user)
