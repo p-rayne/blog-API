@@ -193,3 +193,29 @@ class FollowListCreateAPIViewAPITestCase(APITestCase):
         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
         self.assertEqual(2, UserFeed.objects.get(pk=self.user.pk).feed.count())
         self.assertGreater(UserFeed.objects.get(pk=self.user.pk).date_update, date)
+
+    def test_userfeed_update_unfollow(self):
+        UserFeed.objects.create(user=self.user)
+        self.assertEqual(0, UserFeed.objects.get(pk=self.user.pk).feed.count())
+        date = UserFeed.objects.get(pk=self.user.pk).date_update
+        UserFollowing.objects.create(user_id=self.user, following_user_id=self.user2)
+        sleep(1)
+        Post.objects.create(title='test title', text='test text', owner=self.user2)
+        Post.objects.create(title='test2 title', text='test2 text', owner=self.user2)
+        sleep(1)
+        url = reverse('follow')
+        data = {
+            'following_user_id': self.user3.pk
+        }
+        json_data = json.dumps(data)
+        self.client.force_authenticate(self.user)
+        response = self.client.post(url, data=json_data,
+                                    content_type='application/json')
+        self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+        self.assertEqual(2, UserFeed.objects.get(pk=self.user.pk).feed.count())
+        Post.objects.create(title='test title', text='test text', owner=self.user3)
+        url = reverse('unfollow', args=(UserFollowing.objects.get(following_user_id=self.user2.pk).pk,))
+        response = self.client.delete(url)
+        self.assertEqual(status.HTTP_204_NO_CONTENT, response.status_code)
+        self.assertEqual(1, UserFeed.objects.get(pk=self.user.pk).feed.count())
+        self.assertGreater(UserFeed.objects.get(pk=self.user.pk).date_update, date)
