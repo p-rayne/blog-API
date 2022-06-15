@@ -1,4 +1,6 @@
 import json
+from datetime import datetime
+from time import sleep
 
 from django.contrib.auth import get_user_model
 from django.urls import reverse
@@ -6,7 +8,7 @@ from rest_framework import status
 from rest_framework.exceptions import ErrorDetail
 from rest_framework.test import APITestCase
 
-from post.models import Post, UserFollowing
+from post.models import Post, UserFollowing, UserFeed
 
 UserModel = get_user_model()
 
@@ -97,6 +99,10 @@ class FollowListCreateAPIViewAPITestCase(APITestCase):
         self.password2 = '123456super'
         self.user2 = UserModel.objects.create_user(self.email2, self.password2)
 
+        self.email3 = 'jax.doe@example.com'
+        self.password3 = '123456super'
+        self.user3 = UserModel.objects.create_user(self.email3, self.password3)
+
     def test_follow_create(self):
         self.assertEqual(0, UserFollowing.objects.count())
         url = reverse('follow')
@@ -143,9 +149,47 @@ class FollowListCreateAPIViewAPITestCase(APITestCase):
 
     def test_unfollow(self):
         UserFollowing.objects.create(user_id=self.user, following_user_id=self.user2)
+        UserFeed.objects.create(user=self.user)
         self.assertEqual(1, UserFollowing.objects.count())
         url = reverse('unfollow', args=(UserFollowing.objects.last().pk,))
         self.client.force_authenticate(self.user)
         response = self.client.delete(url)
         self.assertEqual(status.HTTP_204_NO_CONTENT, response.status_code)
         self.assertEqual(0, UserFollowing.objects.count())
+
+    def test_userfeed_create(self):
+        self.assertEqual(0, UserFeed.objects.count())
+        self.assertFalse(UserFeed.objects.filter(pk=self.user.pk).exists())
+        url = reverse('follow')
+        data = {
+            'following_user_id': self.user2.pk
+        }
+        json_data = json.dumps(data)
+        self.client.force_authenticate(self.user)
+        response = self.client.post(url, data=json_data,
+                                    content_type='application/json')
+        self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+        self.assertEqual(1, UserFeed.objects.count())
+        self.assertTrue(UserFeed.objects.filter(pk=self.user.pk).exists())
+        self.assertIsNotNone(UserFeed.objects.get(pk=self.user.pk).date_update)
+
+    def test_userfeed_update_newfollow(self):
+        UserFeed.objects.create(user=self.user)
+        self.assertEqual(0, UserFeed.objects.get(pk=self.user.pk).feed.count())
+        date = UserFeed.objects.get(pk=self.user.pk).date_update
+        UserFollowing.objects.create(user_id=self.user, following_user_id=self.user2)
+        sleep(1)
+        Post.objects.create(title='test title', text='test text', owner=self.user2)
+        Post.objects.create(title='test2 title', text='test2 text', owner=self.user2)
+        sleep(1)
+        url = reverse('follow')
+        data = {
+            'following_user_id': self.user3.pk
+        }
+        json_data = json.dumps(data)
+        self.client.force_authenticate(self.user)
+        response = self.client.post(url, data=json_data,
+                                    content_type='application/json')
+        self.assertEqual(status.HTTP_201_CREATED, response.status_code)
+        self.assertEqual(2, UserFeed.objects.get(pk=self.user.pk).feed.count())
+        self.assertGreater(UserFeed.objects.get(pk=self.user.pk).date_update, date)
