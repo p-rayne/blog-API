@@ -17,7 +17,12 @@ class FollowingSerializer(serializers.ModelSerializer):
         fields = ('id', 'following_user', 'following_user_id', 'created', )
 
 
-# class FollowersSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = UserFollowing
-#         fields = ("id", "user_id", "created")
+class PostsFeedSerializer(serializers.ModelSerializer):
+    owner_email = serializers.EmailField(source='owner.email', read_only=True)
+
+    class Meta:
+        model = Post
+        fields = ('id', 'title', 'text', 'owner', 'owner_email', 'date_create')
+        extra_kwargs = {
+            'owner': {'read_only': True},
+        }

@@ -6,8 +6,8 @@ from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 
-from post.models import Post, UserFollowing
-from post.serializer import PostCreateSerializer, FollowingSerializer
+from post.models import Post, UserFollowing, UserFeed
+from post.serializer import PostCreateSerializer, FollowingSerializer, PostsFeedSerializer
 from post.utils import feed_create_or_add
 
 UserModel = get_user_model()
@@ -69,3 +69,16 @@ class FollowListCreateAPIView(mixins.CreateModelMixin, mixins.ListModelMixin, mi
 
     def delete(self, request, *args, **kwargs):
         return self.destroy(request, *args, **kwargs)
+
+
+class PostsFeedListAPIView(mixins.ListModelMixin, generics.GenericAPIView):
+    serializer_class = PostsFeedSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user_feed = UserFeed.objects.get(user=self.request.user)
+        return user_feed.feed.all()
+
+    def get(self, request, *args, **kwargs):
+        feed_create_or_add(self, request)
+        return self.list(request, *args, **kwargs)
