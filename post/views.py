@@ -1,14 +1,15 @@
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError
-from rest_framework import generics, mixins
+from rest_framework import generics, mixins, status
 from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from rest_framework.response import Response
 
 from post.models import Post, UserFollowing, UserFeed
 from post.serializer import PostCreateSerializer, FollowingSerializer, PostsFeedSerializer
-from post.utils import feed_create_or_add
+from post.utils import feed_create_or_add, feed_delete
 
 UserModel = get_user_model()
 
@@ -59,6 +60,7 @@ class FollowListCreateAPIView(mixins.CreateModelMixin, mixins.ListModelMixin, mi
         return self.list(request, *args, **kwargs)
 
     def delete(self, request, *args, **kwargs):
+        feed_delete(self, request)
         return self.destroy(request, *args, **kwargs)
 
 
