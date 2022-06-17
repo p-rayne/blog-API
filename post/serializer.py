@@ -1,22 +1,31 @@
+from django.contrib.auth import get_user_model
 from rest_framework import serializers
 
 from post.models import Post, UserFollowing
 
+UserModel = get_user_model()
+
+
+class PostOwnerSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserModel
+        fields = ('id', 'email')
+
 
 class PostSerializer(serializers.ModelSerializer):
-    owner_email = serializers.EmailField(source='owner.email', read_only=True)
+    owner = PostOwnerSerializer(read_only=True)
 
     class Meta:
         model = Post
-        fields = ('id', 'title', 'text', 'owner', 'owner_email', 'date_create')
-        extra_kwargs = {
-            'owner': {'read_only': True},
-        }
+        fields = ('id', 'title', 'text', 'owner', 'date_create')
 
 
 class FollowingSerializer(serializers.ModelSerializer):
-    following_user = serializers.EmailField(source='following_user_id.email', read_only=True)
+    follow_to = PostOwnerSerializer(read_only=True, source='following_user')
 
     class Meta:
         model = UserFollowing
-        fields = ('id', 'following_user', 'following_user_id', 'created',)
+        fields = ('id', 'follow_to', 'following_user', 'created')
+        extra_kwargs = {
+            'following_user': {'write_only': True},
+        }
