@@ -34,7 +34,7 @@ class PostListAPIView(generics.ListAPIView):
         except ObjectDoesNotExist:
             raise NotFound(detail='user not found')
 
-        return Post.objects.filter(owner=owner)
+        return Post.objects.filter(owner=owner).select_related('owner')
 
 
 class FollowListCreateAPIView(mixins.CreateModelMixin, mixins.ListModelMixin, mixins.DestroyModelMixin,
@@ -59,8 +59,13 @@ class FollowListCreateAPIView(mixins.CreateModelMixin, mixins.ListModelMixin, mi
         return self.list(request, *args, **kwargs)
 
     def delete(self, request, *args, **kwargs):
-        feed_delete(self, request)
-        return self.destroy(request, *args, **kwargs)
+        pk = self.kwargs.get('pk')
+        try:
+            UserFollowing.objects.filter(pk=pk, user=self.request.user).exists()
+            feed_delete(self, request)
+            return self.destroy(request, *args, **kwargs)
+        except Exception:
+            raise NotFound
 
 
 class PostsFeedAPIListPagination(PageNumberPagination):

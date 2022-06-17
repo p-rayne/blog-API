@@ -116,6 +116,19 @@ class FollowListCreateAPIViewAPITestCase(APITestCase):
         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
         self.assertEqual(1, UserFollowing.objects.count())
 
+    def test_follow_create_invalid(self):
+        self.assertEqual(0, UserFollowing.objects.count())
+        url = reverse('follow')
+        data = {
+            'following_user': (self.user2.pk + 10)
+        }
+        json_data = json.dumps(data)
+        self.client.force_authenticate(self.user)
+        response = self.client.post(url, data=json_data,
+                                    content_type='application/json')
+        self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
+        self.assertEqual(0, UserFollowing.objects.count())
+
     def test_follow_create_noauth(self):
         self.assertEqual(0, UserFollowing.objects.count())
         url = reverse('follow')
@@ -174,6 +187,16 @@ class FollowListCreateAPIViewAPITestCase(APITestCase):
         response = self.client.delete(url)
         self.assertEqual(status.HTTP_204_NO_CONTENT, response.status_code)
         self.assertEqual(0, UserFollowing.objects.count())
+
+    def test_unfollow_invalid(self):
+        UserFollowing.objects.create(user=self.user, following_user=self.user2)
+        UserFeed.objects.create(user=self.user)
+        self.assertEqual(1, UserFollowing.objects.count())
+        url = reverse('unfollow', args=((UserFollowing.objects.last().pk + 1),))
+        self.client.force_authenticate(self.user)
+        response = self.client.delete(url)
+        self.assertEqual(status.HTTP_404_NOT_FOUND, response.status_code)
+        self.assertEqual(1, UserFollowing.objects.count())
 
     def test_unfollow_noauth(self):
         UserFollowing.objects.create(user=self.user, following_user=self.user2)
