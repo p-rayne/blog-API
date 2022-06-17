@@ -1,6 +1,7 @@
 from django.urls import path
 
-from .views import PostCreateAPIView, PostListAPIView, FollowListCreateAPIView, PostsFeedListAPIView
+from .views import PostCreateAPIView, PostListAPIView, FollowListCreateAPIView, PostsFeedListAPIView, \
+    PostFeedRetrieveAPIView
 
 urlpatterns = [
     path(r'create/', PostCreateAPIView.as_view(), name='post_create'),
@@ -8,4 +9,5 @@ urlpatterns = [
     path(r'follow/', FollowListCreateAPIView.as_view(), name='follow'),
     path(r'follow/<int:pk>/', FollowListCreateAPIView.as_view(), name='unfollow'),
     path(r'posts/feed/', PostsFeedListAPIView.as_view(), name='posts_feed'),
+    path(r'posts/feed/<int:pk>/', PostFeedRetrieveAPIView.as_view(), name='post_read'),
 ]

@@ -80,3 +80,20 @@ class PostsFeedListAPIView(mixins.ListModelMixin, generics.GenericAPIView):
     def get(self, request, *args, **kwargs):
         feed_create_or_add(self, request)
         return self.list(request, *args, **kwargs)
+
+
+class PostFeedRetrieveAPIView(generics.RetrieveAPIView):
+    queryset = Post.objects.all()
+    serializer_class = PostSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        user_feed = UserFeed.objects.get(pk=self.request.user.pk)
+        pk = self.kwargs.get('pk')
+        try:
+            if pk in user_feed.feed.values_list("id", flat=True):
+                if pk not in user_feed.read.values_list("id", flat=True):
+                    user_feed.read.add(pk)
+        except Exception:
+            raise NotFound
+        return self.retrieve(request, *args, **kwargs)
