@@ -1,5 +1,4 @@
 import json
-from datetime import datetime
 from time import sleep
 
 from django.contrib.auth import get_user_model
@@ -47,6 +46,7 @@ class PostCreateAPIViewAPITestCase(APITestCase):
         self.client.force_authenticate(self.user)
         response = self.client.post(url, data=json_data,
                                     content_type='application/json')
+
         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
         self.assertEqual(1, Post.objects.count())
         self.assertEqual('john.doe@example.com', Post.objects.last().owner.email)
@@ -107,7 +107,7 @@ class FollowListCreateAPIViewAPITestCase(APITestCase):
         self.assertEqual(0, UserFollowing.objects.count())
         url = reverse('follow')
         data = {
-            'following_user_id': self.user2.pk
+            'following_user': self.user2.pk
         }
         json_data = json.dumps(data)
         self.client.force_authenticate(self.user)
@@ -120,7 +120,7 @@ class FollowListCreateAPIViewAPITestCase(APITestCase):
         self.assertEqual(0, UserFollowing.objects.count())
         url = reverse('follow')
         data = {
-            'following_user_id': self.user2.pk
+            'following_user': self.user2.pk
         }
         json_data = json.dumps(data)
         response = self.client.post(url, data=json_data,
@@ -129,10 +129,10 @@ class FollowListCreateAPIViewAPITestCase(APITestCase):
         self.assertEqual(0, UserFollowing.objects.count())
 
     def test_follow_not_unique(self):
-        UserFollowing.objects.create(user_id=self.user, following_user_id=self.user2)
+        UserFollowing.objects.create(user=self.user, following_user=self.user2)
         url = reverse('follow')
         data = {
-            'following_user_id': self.user2.pk
+            'following_user': self.user2.pk
         }
         json_data = json.dumps(data)
         self.client.force_authenticate(self.user)
@@ -143,7 +143,7 @@ class FollowListCreateAPIViewAPITestCase(APITestCase):
     def test_follow_self(self):
         url = reverse('follow')
         data = {
-            'following_user_id': self.user.pk
+            'following_user': self.user.pk
         }
         json_data = json.dumps(data)
         self.client.force_authenticate(self.user)
@@ -153,7 +153,7 @@ class FollowListCreateAPIViewAPITestCase(APITestCase):
 
     def test_follow_list(self):
         url = reverse('follow')
-        UserFollowing.objects.create(user_id=self.user, following_user_id=self.user2)
+        UserFollowing.objects.create(user=self.user, following_user=self.user2)
         self.client.force_authenticate(self.user)
         response = self.client.get(url)
         self.assertEqual(status.HTTP_200_OK, response.status_code)
@@ -161,12 +161,12 @@ class FollowListCreateAPIViewAPITestCase(APITestCase):
 
     def test_follow_list_noauth(self):
         url = reverse('follow')
-        UserFollowing.objects.create(user_id=self.user, following_user_id=self.user2)
+        UserFollowing.objects.create(user=self.user, following_user=self.user2)
         response = self.client.get(url)
         self.assertEqual(status.HTTP_401_UNAUTHORIZED, response.status_code)
 
     def test_unfollow(self):
-        UserFollowing.objects.create(user_id=self.user, following_user_id=self.user2)
+        UserFollowing.objects.create(user=self.user, following_user=self.user2)
         UserFeed.objects.create(user=self.user)
         self.assertEqual(1, UserFollowing.objects.count())
         url = reverse('unfollow', args=(UserFollowing.objects.last().pk,))
@@ -176,7 +176,7 @@ class FollowListCreateAPIViewAPITestCase(APITestCase):
         self.assertEqual(0, UserFollowing.objects.count())
 
     def test_unfollow_noauth(self):
-        UserFollowing.objects.create(user_id=self.user, following_user_id=self.user2)
+        UserFollowing.objects.create(user=self.user, following_user=self.user2)
         UserFeed.objects.create(user=self.user)
         self.assertEqual(1, UserFollowing.objects.count())
         url = reverse('unfollow', args=(UserFollowing.objects.last().pk,))
@@ -189,7 +189,7 @@ class FollowListCreateAPIViewAPITestCase(APITestCase):
         self.assertFalse(UserFeed.objects.filter(pk=self.user.pk).exists())
         url = reverse('follow')
         data = {
-            'following_user_id': self.user2.pk
+            'following_user': self.user2.pk
         }
         json_data = json.dumps(data)
         self.client.force_authenticate(self.user)
@@ -204,14 +204,14 @@ class FollowListCreateAPIViewAPITestCase(APITestCase):
         UserFeed.objects.create(user=self.user)
         self.assertEqual(0, UserFeed.objects.get(pk=self.user.pk).feed.count())
         date = UserFeed.objects.get(pk=self.user.pk).date_update
-        UserFollowing.objects.create(user_id=self.user, following_user_id=self.user2)
+        UserFollowing.objects.create(user=self.user, following_user=self.user2)
         sleep(1)
         Post.objects.create(title='test title', text='test text', owner=self.user2)
         Post.objects.create(title='test2 title', text='test2 text', owner=self.user2)
         sleep(1)
         url = reverse('follow')
         data = {
-            'following_user_id': self.user3.pk
+            'following_user': self.user3.pk
         }
         json_data = json.dumps(data)
         self.client.force_authenticate(self.user)
@@ -225,15 +225,15 @@ class FollowListCreateAPIViewAPITestCase(APITestCase):
         obj = UserFeed.objects.create(user=self.user)
         self.assertEqual(0, UserFeed.objects.get(pk=self.user.pk).feed.count())
         date = UserFeed.objects.get(pk=self.user.pk).date_update
-        UserFollowing.objects.create(user_id=self.user, following_user_id=self.user2)
-        UserFollowing.objects.create(user_id=self.user, following_user_id=self.user3)
+        UserFollowing.objects.create(user=self.user, following_user=self.user2)
+        UserFollowing.objects.create(user=self.user, following_user=self.user3)
         sleep(1)
         obj.feed.create(title='test title', text='test text', owner=self.user2)
         obj.feed.create(title='test2 title', text='test2 text', owner=self.user2)
         self.assertEqual(2, UserFeed.objects.get(pk=self.user.pk).feed.count())
         Post.objects.create(title='test title', text='test text', owner=self.user3)
         self.client.force_authenticate(self.user)
-        url = reverse('unfollow', args=(UserFollowing.objects.get(following_user_id=self.user2.pk).pk,))
+        url = reverse('unfollow', args=(UserFollowing.objects.get(following_user=self.user2.pk).pk,))
         response = self.client.delete(url)
         self.assertEqual(status.HTTP_204_NO_CONTENT, response.status_code)
         self.assertEqual(1, UserFeed.objects.get(pk=self.user.pk).feed.count())
@@ -250,7 +250,7 @@ class PostsFeedListAPIViewAPITestCase(APITestCase):
         self.password2 = '123456super'
         self.user2 = UserModel.objects.create_user(self.email2, self.password2)
 
-        UserFollowing.objects.create(user_id=self.user, following_user_id=self.user2)
+        UserFollowing.objects.create(user=self.user, following_user=self.user2)
         obj = UserFeed.objects.create(user=self.user)
         for i in range(1, 10):
             obj.feed.create(title=f'Test post title_{i}', text=f'Test post text_{i}', owner=self.user2)

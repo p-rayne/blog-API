@@ -21,19 +21,19 @@ class Post(models.Model):
 
 
 class UserFollowing(models.Model):
-    user_id = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="following", on_delete=models.CASCADE)
-    following_user_id = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="followers", on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="following", on_delete=models.CASCADE)
+    following_user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="followers", on_delete=models.CASCADE)
     created = models.DateTimeField(auto_now_add=True, db_index=True)
 
     class Meta:
         constraints = [
-            models.UniqueConstraint(fields=['user_id', 'following_user_id'], name="unique_followers")
+            models.UniqueConstraint(fields=['user', 'following_user'], name="unique_followers")
         ]
 
         ordering = ["-created"]
 
     def clean(self):
-        if self.user_id == self.following_user_id:
+        if self.user == self.following_user:
             raise ValidationError({'error': "Users can't follow themselves"})
 
     def save(self, *args, **kwargs):
@@ -41,7 +41,7 @@ class UserFollowing(models.Model):
         super().save(*args, **kwargs)
 
     def __str__(self):
-        return f'{self.user_id} follows {self.following_user_id}'
+        return f'{self.user} follows {self.following_user}'
 
 
 class UserFeed(models.Model):
