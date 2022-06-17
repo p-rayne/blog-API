@@ -75,7 +75,14 @@ class PostsFeedListAPIView(mixins.ListModelMixin, generics.GenericAPIView):
     pagination_class = PostsFeedAPIListPagination
 
     def get_queryset(self):
-        return UserFeed.objects.get(user=self.request.user).feed.all()
+        user_feed = UserFeed.objects.get(user=self.request.user)
+        queryset = UserFeed.objects.get(user=self.request.user).feed.all()
+        readed = self.request.query_params.get('readed')
+        if readed == 'true':
+            queryset = user_feed.read.all()
+        elif readed == 'false':
+            queryset = user_feed.feed.exclude(id__in=user_feed.read.values_list('id', flat=True))
+        return queryset
 
     def get(self, request, *args, **kwargs):
         feed_create_or_add(self, request)
