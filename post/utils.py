@@ -13,7 +13,7 @@ def feed_create_or_add(self, request):
     obj.save()
 
 
-def feed_delete(self, request, *args, **kwargs):
+def feed_delete(self, request):
     user = self.request.user
     pk = self.kwargs.get('pk')
 

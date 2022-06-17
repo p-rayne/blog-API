@@ -1,21 +1,20 @@
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError
-from rest_framework import generics, mixins, status
+from rest_framework import generics, mixins
 from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated, AllowAny
-from rest_framework.response import Response
 
 from post.models import Post, UserFollowing, UserFeed
-from post.serializer import PostCreateSerializer, FollowingSerializer, PostsFeedSerializer
+from post.serializer import PostSerializer, FollowingSerializer
 from post.utils import feed_create_or_add, feed_delete
 
 UserModel = get_user_model()
 
 
 class PostCreateAPIView(generics.CreateAPIView):
-    serializer_class = PostCreateSerializer
+    serializer_class = PostSerializer
     permission_classes = [IsAuthenticated]
 
     def perform_create(self, serializer):
@@ -23,7 +22,7 @@ class PostCreateAPIView(generics.CreateAPIView):
 
 
 class PostListAPIView(generics.ListAPIView):
-    serializer_class = PostCreateSerializer
+    serializer_class = PostSerializer
     permission_classes = [AllowAny]
 
     def get_queryset(self):
@@ -71,13 +70,12 @@ class PostsFeedAPIListPagination(PageNumberPagination):
 
 
 class PostsFeedListAPIView(mixins.ListModelMixin, generics.GenericAPIView):
-    serializer_class = PostsFeedSerializer
+    serializer_class = PostSerializer
     permission_classes = [IsAuthenticated]
     pagination_class = PostsFeedAPIListPagination
 
     def get_queryset(self):
-        user_feed = UserFeed.objects.get(user=self.request.user)
-        return user_feed.feed.all()
+        return UserFeed.objects.get(user=self.request.user).feed.all()
 
     def get(self, request, *args, **kwargs):
         feed_create_or_add(self, request)
