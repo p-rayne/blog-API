@@ -43,7 +43,7 @@ class FollowListCreateAPIView(mixins.CreateModelMixin, mixins.ListModelMixin, mi
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return UserFollowing.objects.filter(user_id=self.request.user)
+        return UserFollowing.objects.filter(user=self.request.user)
 
     def post(self, request, *args, **kwargs):
         feed_create_or_add(self, request)
@@ -51,7 +51,7 @@ class FollowListCreateAPIView(mixins.CreateModelMixin, mixins.ListModelMixin, mi
 
     def perform_create(self, serializer):
         try:
-            serializer.save(user_id=self.request.user)
+            serializer.save(user=self.request.user)
         except IntegrityError:
             raise ValidationError({'error': 'You are already follow this user'})
 
@@ -75,14 +75,18 @@ class PostsFeedListAPIView(mixins.ListModelMixin, generics.GenericAPIView):
     pagination_class = PostsFeedAPIListPagination
 
     def get_queryset(self):
-        user_feed = UserFeed.objects.get(user=self.request.user)
-        queryset = UserFeed.objects.get(user=self.request.user).feed.all()
         readed = self.request.query_params.get('readed')
-        if readed == 'true':
-            queryset = user_feed.read.all()
+        obj = UserFeed.objects.get(user=self.request.user)
+        if readed is None:
+            queryset = obj.feed.all().select_related('owner')
+            return queryset
+        elif readed == 'true':
+            queryset = obj.read.all().select_related('owner')
+            return queryset
         elif readed == 'false':
-            queryset = user_feed.feed.exclude(id__in=user_feed.read.values_list('id', flat=True))
-        return queryset
+            queryset = obj.feed.select_related('owner').exclude(
+                id__in=obj.read.select_related('owner').all())
+            return queryset
 
     def get(self, request, *args, **kwargs):
         feed_create_or_add(self, request)
