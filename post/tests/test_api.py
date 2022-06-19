@@ -294,6 +294,37 @@ class PostsFeedListAPIViewAPITestCase(APITestCase):
         for i in range(len(dct['results'])):
             self.assertEqual(dct['results'][i]['title'], a[i]['title'])
 
+    def test_feed_list_filter_readed_true(self):
+        obj = UserFeed.objects.get(pk=self.user.pk)
+        obj.read.add(*obj.feed.all()[:5].values_list('id', flat=True))
+        url = reverse('posts_feed')
+        self.client.force_authenticate(self.user)
+        data = {'readed': 'true'}
+        response = self.client.get(url, data)
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        dct = json.loads(response.content)
+        self.assertEqual(dct['count'], obj.read.count())
+        a = list(obj.read.all().values())
+        for i in range(len(dct['results'])):
+            self.assertEqual(dct['results'][i]['title'], a[i]['title'])
+
+    def test_feed_list_filter_readed_false(self):
+        obj = UserFeed.objects.get(pk=self.user.pk)
+        readed = obj.feed.all()[:5].values_list('id', flat=True)
+        obj.read.add(*readed)
+
+        url = reverse('posts_feed')
+        self.client.force_authenticate(self.user)
+        data = {'readed': 'false'}
+        response = self.client.get(url, data)
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+
+        dct = json.loads(response.content)
+        self.assertEqual(dct['count'], obj.feed.exclude(id__in=readed).count())
+        a = list(obj.feed.exclude(id__in=readed).values())
+        for i in range(len(dct['results'])):
+            self.assertEqual(dct['results'][i]['title'], a[i]['title'])
+
     def test_pagination(self):
         obj = UserFeed.objects.get(user=self.user)
         for i in range(10, 14):
@@ -321,3 +352,46 @@ class PostsFeedListAPIViewAPITestCase(APITestCase):
         self.assertGreater(UserFeed.objects.get(user=self.user).date_update, date)
         dct = json.loads(response.content)
         self.assertEqual(dct['results'][0]['title'], UserFeed.objects.get(user=self.user).feed.first().title)
+
+
+class PostFeedRetrieveAPIViewAPITestCase(APITestCase):
+    def setUp(self):
+        self.email = 'john.doe@example.com'
+        self.password = '123456super'
+        self.user = UserModel.objects.create_user(self.email, self.password)
+
+        self.email2 = 'jane.doe@example.com'
+        self.password2 = '123456super'
+        self.user2 = UserModel.objects.create_user(self.email2, self.password2)
+
+        UserFollowing.objects.create(user=self.user, following_user=self.user2)
+        obj = UserFeed.objects.create(user=self.user)
+        obj.feed.create(title='Test post title', text='Test post text', owner=self.user2)
+
+    def test_retrieve_noauth(self):
+        url = reverse('post_read', args=(UserFeed.objects.get().feed.values_list('id', flat=True)))
+        response = self.client.get(url)
+        self.assertEqual(status.HTTP_401_UNAUTHORIZED, response.status_code)
+
+    def test_retrieve(self):
+        url = reverse('post_read', args=(UserFeed.objects.get().feed.values_list('id', flat=True)))
+        self.client.force_authenticate(self.user)
+        response = self.client.get(url)
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        dct = json.loads(response.content)
+        self.assertEqual(dct['title'], UserFeed.objects.get().feed.first().title)
+
+    def test_retrieve_invalid(self):
+        url = reverse('post_read', args=(200,))
+        self.client.force_authenticate(self.user)
+        response = self.client.get(url)
+        self.assertEqual(status.HTTP_404_NOT_FOUND, response.status_code)
+
+    def test_read_add(self):
+        self.assertEqual(0, UserFeed.objects.get().read.count())
+        url = reverse('post_read', args=(UserFeed.objects.get().feed.values_list('id', flat=True)))
+        self.client.force_authenticate(self.user)
+        response = self.client.get(url)
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        self.assertEqual(1, UserFeed.objects.get().read.count())
+        self.assertEqual(Post.objects.get(owner=self.user2), UserFeed.objects.get().read.last())
