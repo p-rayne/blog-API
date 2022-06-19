@@ -1,10 +1,8 @@
-import datetime
-
 from django.contrib.auth import get_user_model
 from django.test import TestCase
 
-from post.models import Post
-from post.serializer import PostOwnerSerializer, PostSerializer
+from post.models import Post, UserFollowing
+from post.serializer import PostOwnerSerializer, PostSerializer, FollowingSerializer
 
 UserModel = get_user_model()
 
@@ -75,5 +73,48 @@ class PostSerializerTestCase(TestCase):
                 },
                 'date_create': date
             },
+        ]
+        self.assertEqual(expected_data, data)
+
+
+class FollowingSerializerTestCase(TestCase):
+    def setUp(self):
+        self.email = 'john.doe@example.com'
+        self.password = '123456super'
+        self.user = UserModel.objects.create_user(self.email, self.password)
+
+        self.email2 = 'jane.doe@example.com'
+        self.password2 = '123456super'
+        self.user2 = UserModel.objects.create_user(self.email2, self.password2)
+
+        self.email3 = 'jax.doe@example.com'
+        self.password3 = '123456super'
+        self.user3 = UserModel.objects.create_user(self.email3, self.password3)
+
+        self.user.following.create(following_user=self.user2)
+        self.user.following.create(following_user=self.user3)
+
+    def test_follows_ok(self):
+        follows = UserFollowing.objects.all()
+        data = FollowingSerializer(follows, many=True).data
+        date1 = UserFollowing.objects.get(following_user=self.user2).created.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+        date2 = UserFollowing.objects.get(following_user=self.user3).created.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
+        expected_data = [
+            {
+                "id": UserFollowing.objects.get(user=self.user, following_user=self.user3).pk,
+                "follow_to": {
+                    "id": self.user3.pk,
+                    "email": "jax.doe@example.com"
+                },
+                "created": date2
+            },
+            {
+                "id": UserFollowing.objects.get(user=self.user, following_user=self.user2).pk,
+                "follow_to": {
+                    "id": self.user2.pk,
+                    "email": "jane.doe@example.com"
+                },
+                "created": date1
+            }
         ]
         self.assertEqual(expected_data, data)
