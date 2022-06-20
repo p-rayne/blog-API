@@ -9,10 +9,12 @@ https://docs.djangoproject.com/en/4.0/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.0/ref/settings/
 """
-
+from datetime import timedelta
 from pathlib import Path
 from dotenv import load_dotenv
 import os
+
+from rest_framework.settings import api_settings
 
 load_dotenv()
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -148,4 +150,10 @@ QUERYCOUNT = {
     'IGNORE_SQL_PATTERNS': [],
     'DISPLAY_DUPLICATES': None,
     'RESPONSE_HEADER': 'X-DjangoQueryCount-Count'
+}
+
+REST_KNOX = {
+  'TOKEN_TTL': timedelta(hours=12),
+  'TOKEN_LIMIT_PER_USER': 5,
+  'AUTO_REFRESH': False,
 }
