@@ -46,7 +46,25 @@ class UserListCreateAPITestCase(APITestCase):
         self.assertEqual(1, self.user.posts.count())
 
     def test_posts_ordering(self):
-        pass
+        url = reverse('users')
+        for i in range(1, 4):
+            self.user.posts.create(title=f'title for test post{i}', text=f'text for test post{i}')
+        self.user2.posts.create(title='title for test post', text='text for test post')
+        response = self.client.get(url, {'ordering': '-posts_count'})
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        dct = json.loads(response.content)
+        self.assertEqual(2, len(dct))
+        self.assertEqual(self.user.pk, dct[0]['id'])
+        self.assertEqual(self.user2.pk, dct[1]['id'])
+        self.assertEqual(3, self.user.posts.count())
+
+        response = self.client.get(url, {'ordering': 'posts_count'})
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        dct = json.loads(response.content)
+        self.assertEqual(2, len(dct))
+        self.assertEqual(self.user2.pk, dct[0]['id'])
+        self.assertEqual(self.user.pk, dct[1]['id'])
+        self.assertEqual(1, self.user2.posts.count())
 
     def test_create_user(self):
         url = reverse('users')
