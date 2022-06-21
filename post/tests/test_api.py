@@ -72,8 +72,8 @@ class PostListAPIViewAPITestCase(APITestCase):
         url = reverse('user_posts', args=(2000,))
         response = self.client.get(url)
         self.assertEqual(status.HTTP_404_NOT_FOUND, response.status_code)
-        self.assertEqual({'detail':
-                              ErrorDetail(string='user not found',
+        self.assertEqual({'error':
+                              ErrorDetail(string='User not found',
                                           code='not_found')}, response.data)
 
     def test_posts_list1(self):
@@ -253,14 +253,14 @@ class FollowListCreateAPIViewAPITestCase(APITestCase):
         sleep(1)
         obj.feed.create(title='test title', text='test text', owner=self.user2)
         obj.feed.create(title='test2 title', text='test2 text', owner=self.user2)
-        self.assertEqual(2, UserFeed.objects.get(pk=self.user.pk).feed.count())
-        Post.objects.create(title='test title', text='test text', owner=self.user3)
+        obj.feed.create(title='test title', text='test text', owner=self.user3)
+        self.assertEqual(3, UserFeed.objects.get(pk=self.user.pk).feed.count())
         self.client.force_authenticate(self.user)
         url = reverse('unfollow', args=(self.user2.pk,))
         response = self.client.delete(url)
         self.assertEqual(status.HTTP_204_NO_CONTENT, response.status_code)
         self.assertEqual(1, UserFeed.objects.get(pk=self.user.pk).feed.count())
-        self.assertGreater(UserFeed.objects.get(pk=self.user.pk).date_update, date)
+        self.assertEqual(UserFeed.objects.get(pk=self.user.pk).date_update, date)
 
 
 class PostsFeedListAPIViewAPITestCase(APITestCase):

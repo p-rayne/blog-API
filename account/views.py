@@ -10,13 +10,13 @@ UserModel = get_user_model()
 
 
 class UserListCreateAPIView(generics.ListCreateAPIView):
-    queryset = UserModel.objects.all().annotate(
+    queryset = UserModel.objects.all().only('id', 'email').annotate(
         posts_count=Count('posts')
     )
     serializer_class = UserSerializer
     permission_classes = [permissions.AllowAny]
-    filter_backends = (OrderingFilter, )
-    ordering_fields = ('posts_count', )
+    filter_backends = (OrderingFilter,)
+    ordering_fields = ('posts_count',)
 
 
 class LoginView(KnoxLoginView):

@@ -26,15 +26,11 @@ class PostListAPIView(generics.ListAPIView):
     permission_classes = [AllowAny]
 
     def get_queryset(self):
-        pk = self.kwargs.get('pk', None)
-
-        try:
-            owner = UserModel.objects.get(pk=pk)
-
-        except ObjectDoesNotExist:
-            raise NotFound(detail='user not found')
-
-        return Post.objects.filter(owner=owner).select_related('owner')
+        pk = self.kwargs.get('pk')
+        if UserModel.objects.filter(pk=pk).exists():
+            return Post.objects.filter(owner_id=pk).select_related('owner')
+        else:
+            raise NotFound({'error': 'User not found'})
 
 
 class FollowListCreateAPIView(mixins.CreateModelMixin, mixins.ListModelMixin, mixins.DestroyModelMixin,
@@ -43,7 +39,9 @@ class FollowListCreateAPIView(mixins.CreateModelMixin, mixins.ListModelMixin, mi
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
-        return UserFollowing.objects.filter(user=self.request.user)
+        return UserFollowing.objects.filter(user=self.request.user). \
+            select_related('following_user'). \
+            only('following_user__id', 'following_user__email', 'created')
 
     def post(self, request, *args, **kwargs):
         feed_create_or_add(self, request)
@@ -62,8 +60,8 @@ class FollowListCreateAPIView(mixins.CreateModelMixin, mixins.ListModelMixin, mi
         try:
             feed_delete(self, request)
             return self.destroy(request, *args, **kwargs)
-        except Exception:
-            raise NotFound
+        except ObjectDoesNotExist:
+            raise NotFound({'error': 'You are not following the user with this id'})
 
     def get_object(self):
         following_user = self.kwargs.get('following_user')
@@ -85,14 +83,16 @@ class PostsFeedListAPIView(mixins.ListModelMixin, generics.GenericAPIView):
         readed = self.request.query_params.get('readed')
         obj = UserFeed.objects.get(user=self.request.user)
         if readed is None:
-            queryset = obj.feed.all().select_related('owner')
+            queryset = obj.feed.all().select_related('owner'). \
+                only('id', 'title', 'text', 'date_create', 'owner__id', 'owner__email')
             return queryset
         elif readed == 'true':
-            queryset = obj.read.all().select_related('owner')
+            queryset = obj.read.all().select_related('owner'). \
+                only('id', 'title', 'text', 'date_create', 'owner__id', 'owner__email')
             return queryset
         elif readed == 'false':
-            queryset = obj.feed.select_related('owner').exclude(
-                id__in=obj.read.select_related('owner').all())
+            queryset = obj.feed.exclude(id__in=obj.read.all()).select_related('owner'). \
+                only('id', 'title', 'text', 'date_create', 'owner__id', 'owner__email')
             return queryset
 
     def get(self, request, *args, **kwargs):
@@ -112,6 +112,6 @@ class PostFeedRetrieveAPIView(generics.RetrieveAPIView):
             if pk in user_feed.feed.values_list("id", flat=True):
                 if pk not in user_feed.read.values_list("id", flat=True):
                     user_feed.read.add(pk)
-        except Exception:
-            raise NotFound
+        except ObjectDoesNotExist:
+            raise NotFound({'error': 'Post not found in your feed'})
         return self.retrieve(request, *args, **kwargs)

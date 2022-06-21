@@ -137,14 +137,14 @@ REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': ('rest_framework.renderers.JSONRenderer',),
     'DEFAULT_AUTHENTICATION_CLASSES': ('knox.auth.TokenAuthentication',),
     'TEST_REQUEST_DEFAULT_FORMAT': 'json',
-   }
+}
 
 QUERYCOUNT = {
     'THRESHOLDS': {
         'MEDIUM': 50,
         'HIGH': 200,
-        'MIN_TIME_TO_LOG':0,
-        'MIN_QUERY_COUNT_TO_LOG':0
+        'MIN_TIME_TO_LOG': 0,
+        'MIN_QUERY_COUNT_TO_LOG': 0
     },
     'IGNORE_REQUEST_PATTERNS': [],
     'IGNORE_SQL_PATTERNS': [],
@@ -153,7 +153,7 @@ QUERYCOUNT = {
 }
 
 REST_KNOX = {
-  'TOKEN_TTL': timedelta(hours=12),
-  'TOKEN_LIMIT_PER_USER': 5,
-  'AUTO_REFRESH': False,
+    'TOKEN_TTL': timedelta(hours=12),
+    'TOKEN_LIMIT_PER_USER': 5,
+    'AUTO_REFRESH': False,
 }
