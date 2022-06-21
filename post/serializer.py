@@ -25,7 +25,7 @@ class FollowingSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = UserFollowing
-        fields = ('id', 'follow_to', 'following_user', 'created')
+        fields = ('follow_to', 'following_user', 'created')
         extra_kwargs = {
             'following_user': {'write_only': True},
         }

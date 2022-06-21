@@ -59,13 +59,15 @@ class FollowListCreateAPIView(mixins.CreateModelMixin, mixins.ListModelMixin, mi
         return self.list(request, *args, **kwargs)
 
     def delete(self, request, *args, **kwargs):
-        pk = self.kwargs.get('pk')
         try:
-            UserFollowing.objects.filter(pk=pk, user=self.request.user).exists()
             feed_delete(self, request)
             return self.destroy(request, *args, **kwargs)
         except Exception:
             raise NotFound
+
+    def get_object(self):
+        following_user = self.kwargs.get('following_user')
+        return UserFollowing.objects.get(user=self.request.user, following_user=following_user)
 
 
 class PostsFeedAPIListPagination(PageNumberPagination):

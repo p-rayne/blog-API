@@ -109,7 +109,7 @@ class BlogAPITestCase(APITestCase):
         self.assertEqual(3, len(response.data))
 
         #  Unsubscribe from user posts.
-        url = reverse('unfollow', args=(UserFollowing.objects.get(user__email=email, following_user=self.user2).pk,))
+        url = reverse('unfollow', args=(self.user2.pk,))
         response = self.client.delete(url)
         self.assertEqual(status.HTTP_204_NO_CONTENT, response.status_code)
         self.assertEqual(2, UserFollowing.objects.filter(user__email=email).count())

@@ -101,7 +101,6 @@ class FollowingSerializerTestCase(TestCase):
         date2 = UserFollowing.objects.get(following_user=self.user3).created.strftime('%Y-%m-%dT%H:%M:%S.%fZ')
         expected_data = [
             {
-                "id": UserFollowing.objects.get(user=self.user, following_user=self.user3).pk,
                 "follow_to": {
                     "id": self.user3.pk,
                     "email": "jax.doe@example.com"
@@ -109,7 +108,6 @@ class FollowingSerializerTestCase(TestCase):
                 "created": date2
             },
             {
-                "id": UserFollowing.objects.get(user=self.user, following_user=self.user2).pk,
                 "follow_to": {
                     "id": self.user2.pk,
                     "email": "jane.doe@example.com"

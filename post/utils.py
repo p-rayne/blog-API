@@ -15,15 +15,15 @@ def feed_create_or_add(self, request):
 
 def feed_delete(self, request):
     user = self.request.user
-    pk = self.kwargs.get('pk')
+    following_user = self.kwargs.get('following_user')
 
     obj = UserFeed.objects.get(user=user)
 
-    following_id = UserFollowing.objects.filter(user=user).exclude(pk=pk).values_list('following_user', flat=True)
+    following_id = UserFollowing.objects.filter(user=user).exclude(following_user=following_user).values_list(
+        'following_user', flat=True)
     posts = Post.objects.filter(owner__in=following_id,
                                 date_create__gte=obj.date_update).values_list('pk', flat=True)
     obj.feed.add(*posts)
-    unfollow_user = UserFollowing.objects.get(pk=pk)
-    unfollow_post = obj.feed.filter(owner_id=unfollow_user.following_user)
+    unfollow_post = obj.feed.filter(owner_id=following_user)
     unfollow_post.delete()
     obj.save()
