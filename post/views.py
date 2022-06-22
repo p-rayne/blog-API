@@ -14,6 +14,10 @@ UserModel = get_user_model()
 
 
 class PostCreateAPIView(generics.CreateAPIView):
+    """
+    Allows the user to create new posts.
+    Requires authentication.
+    """
     serializer_class = PostSerializer
     permission_classes = [IsAuthenticated]
 
@@ -22,6 +26,9 @@ class PostCreateAPIView(generics.CreateAPIView):
 
 
 class PostListAPIView(generics.ListAPIView):
+    """
+    Allows you to view a list of other users posts.
+    """
     serializer_class = PostSerializer
     permission_classes = [AllowAny]
 
@@ -35,6 +42,10 @@ class PostListAPIView(generics.ListAPIView):
 
 class FollowListCreateAPIView(mixins.CreateModelMixin, mixins.ListModelMixin, mixins.DestroyModelMixin,
                               generics.GenericAPIView):
+    """
+    Allows you to subscribe / unsubscribe to users, view the list of subscriptions.
+    Requires authentication.
+    """
     serializer_class = FollowingSerializer
     permission_classes = [IsAuthenticated]
 
@@ -44,7 +55,7 @@ class FollowListCreateAPIView(mixins.CreateModelMixin, mixins.ListModelMixin, mi
             only('following_user__id', 'following_user__email', 'created')
 
     def post(self, request, *args, **kwargs):
-        feed_create_or_add(self, request)
+        feed_create_or_add(self)
         return self.create(request, *args, **kwargs)
 
     def perform_create(self, serializer):
@@ -57,8 +68,11 @@ class FollowListCreateAPIView(mixins.CreateModelMixin, mixins.ListModelMixin, mi
         return self.list(request, *args, **kwargs)
 
     def delete(self, request, *args, **kwargs):
+        """
+        In order to unsubscribe from a user, you must pass his id in the request.
+        """
         try:
-            feed_delete(self, request)
+            feed_delete(self)
             return self.destroy(request, *args, **kwargs)
         except ObjectDoesNotExist:
             raise NotFound({'error': 'You are not following the user with this id'})
@@ -69,12 +83,25 @@ class FollowListCreateAPIView(mixins.CreateModelMixin, mixins.ListModelMixin, mi
 
 
 class PostsFeedAPIListPagination(PageNumberPagination):
+    """
+    Page pagination. The default is 10 posts per page.
+    You can change the number of posts by passing the 'page_size' parameter.
+    Max value = 100 posts per page.
+    """
     page_size = 10
     page_size_query_param = 'page_size'
     max_page_size = 100
 
 
 class PostsFeedListAPIView(mixins.ListModelMixin, generics.GenericAPIView):
+    """
+    Allows you to view the feed of posts.
+    You can filter the feed using the 'readed' parameter:
+        ?readed=true will display only read posts from the feed.
+        ?readed=false will only display unread messages from the feed.
+        if the parameter is not passed in the request, then all posts will be displayed.
+    Requires authentication.
+    """
     serializer_class = PostSerializer
     permission_classes = [IsAuthenticated]
     pagination_class = PostsFeedAPIListPagination
@@ -96,11 +123,16 @@ class PostsFeedListAPIView(mixins.ListModelMixin, generics.GenericAPIView):
             return queryset
 
     def get(self, request, *args, **kwargs):
-        feed_create_or_add(self, request)
+        feed_create_or_add(self)
         return self.list(request, *args, **kwargs)
 
 
 class PostFeedRetrieveAPIView(generics.RetrieveAPIView):
+    """
+    Allows you to add posts to the "read" field of the feed.
+    If the post has already been added, displays information about the post.
+    Requires authentication.
+    """
     queryset = Post.objects.all()
     serializer_class = PostSerializer
     permission_classes = [IsAuthenticated]
@@ -108,10 +140,9 @@ class PostFeedRetrieveAPIView(generics.RetrieveAPIView):
     def get(self, request, *args, **kwargs):
         user_feed = UserFeed.objects.get(pk=self.request.user.pk)
         pk = self.kwargs.get('pk')
-        try:
-            if pk in user_feed.feed.values_list("id", flat=True):
-                if pk not in user_feed.read.values_list("id", flat=True):
-                    user_feed.read.add(pk)
-        except ObjectDoesNotExist:
+        if pk in user_feed.feed.values_list("id", flat=True):
+            if pk not in user_feed.read.values_list("id", flat=True):
+                user_feed.read.add(pk)
+        else:
             raise NotFound({'error': 'Post not found in your feed'})
         return self.retrieve(request, *args, **kwargs)

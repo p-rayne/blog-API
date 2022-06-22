@@ -5,6 +5,9 @@ from blogAPI import settings
 
 
 class Post(models.Model):
+    """
+    User post model.
+    """
     title = models.CharField(max_length=255)
     text = models.TextField()
     owner = models.ForeignKey(
@@ -21,6 +24,9 @@ class Post(models.Model):
 
 
 class UserFollowing(models.Model):
+    """
+    User subscription model. Does not allow you to follow yourself or follow the same user twice.
+    """
     user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="following", on_delete=models.CASCADE)
     following_user = models.ForeignKey(settings.AUTH_USER_MODEL, related_name="followers", on_delete=models.CASCADE)
     created = models.DateTimeField(auto_now_add=True, db_index=True)
@@ -45,6 +51,12 @@ class UserFollowing(models.Model):
 
 
 class UserFeed(models.Model):
+    """
+    User's post feed model.
+    User posts are added to the 'feed' field after subscribing to them.
+    (Posts created before the moment of subscription will not be added.)
+    The 'read' field contains the id of posts that have been read.
+    """
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, primary_key=True)
     feed = models.ManyToManyField(Post, blank=True)
     date_update = models.DateTimeField(auto_now=True)

@@ -7,12 +7,18 @@ UserModel = get_user_model()
 
 
 class PostOwnerSerializer(serializers.ModelSerializer):
+    """
+    Displays the "id" and "email" of the requested user.
+    """
     class Meta:
         model = UserModel
         fields = ('id', 'email')
 
 
 class PostSerializer(serializers.ModelSerializer):
+    """
+    Displays information about the post and its owner.
+    """
     owner = PostOwnerSerializer(read_only=True)
 
     class Meta:
@@ -21,6 +27,9 @@ class PostSerializer(serializers.ModelSerializer):
 
 
 class FollowingSerializer(serializers.ModelSerializer):
+    """
+    Displays information about the subscribed user and date of subscription.
+    """
     follow_to = PostOwnerSerializer(read_only=True, source='following_user')
 
     class Meta:

@@ -6,6 +6,9 @@ from .models import CustomUser
 
 @admin.register(CustomUser)
 class UserAdmin(DjangoUserAdmin):
+    """
+    Custom Admin model for user management.
+    """
     fieldsets = (
         (None, {'fields': ('email', 'password')}),
         ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser',

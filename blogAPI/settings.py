@@ -56,7 +56,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'querycount.middleware.QueryCountMiddleware',
 ]
 
 ROOT_URLCONF = 'blogAPI.urls'
@@ -137,19 +136,6 @@ REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': ('rest_framework.renderers.JSONRenderer',),
     'DEFAULT_AUTHENTICATION_CLASSES': ('knox.auth.TokenAuthentication',),
     'TEST_REQUEST_DEFAULT_FORMAT': 'json',
-}
-
-QUERYCOUNT = {
-    'THRESHOLDS': {
-        'MEDIUM': 50,
-        'HIGH': 200,
-        'MIN_TIME_TO_LOG': 0,
-        'MIN_QUERY_COUNT_TO_LOG': 0
-    },
-    'IGNORE_REQUEST_PATTERNS': [],
-    'IGNORE_SQL_PATTERNS': [],
-    'DISPLAY_DUPLICATES': 15,
-    'RESPONSE_HEADER': 'X-DjangoQueryCount-Count'
 }
 
 REST_KNOX = {

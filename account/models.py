@@ -4,6 +4,9 @@ from django.db import models
 
 
 class CustomUserManager(BaseUserManager):
+    """
+    Custom user manager. Allows you to use an email address instead of a username in user models.
+    """
     use_in_migrations = True
 
     def _create_user(self, email, password, **extra_fields):
@@ -36,6 +39,9 @@ class CustomUserManager(BaseUserManager):
 
 
 class CustomUser(AbstractUser):
+    """
+    Custom User. Allows you to use an email instead of a username.
+    """
     username = None
     email = models.EmailField(unique=True)
 

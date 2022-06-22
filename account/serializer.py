@@ -7,6 +7,10 @@ UserModel = get_user_model()
 
 
 class UserSerializer(serializers.ModelSerializer):
+    """
+    Displays information about the user, and also shows the number of his posts.
+    When creating a user, it validates the password.
+    """
     posts_count = serializers.IntegerField(read_only=True)
 
     class Meta:
@@ -33,6 +37,9 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class CustomAuthTokenSerializer(serializers.Serializer):
+    """
+    Upon successful validation, returns a token to the user.
+    """
     email = serializers.CharField(
         label="email",
         write_only=True
