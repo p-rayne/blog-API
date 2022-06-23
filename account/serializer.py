@@ -51,6 +51,10 @@ class CustomAuthTokenSerializer(serializers.Serializer):
         trim_whitespace=False,
         write_only=True
     )
+    expiry = serializers.DateTimeField(
+        label="Expiry",
+        read_only=True
+    )
     token = serializers.CharField(
         label="Token",
         read_only=True

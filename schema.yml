@@ -1,0 +1,421 @@
+openapi: 3.0.3
+info:
+  title: blog API
+  version: 1.0.0
+  description: Backend part for a blog as a service with REST API
+paths:
+  /api/auth/login/:
+    post:
+      operationId: auth_login_create
+      description: User authentication. After successful validation, the user receives
+        a token.
+      tags:
+      - auth
+      security:
+      - {}
+      responses:
+        '200':
+          description: No response body
+  /api/auth/logout/:
+    post:
+      operationId: auth_logout_create
+      tags:
+      - auth
+      responses:
+        '200':
+          description: No response body
+  /api/auth/logoutall/:
+    post:
+      operationId: auth_logoutall_create
+      description: |-
+        Log the user out of all sessions
+        I.E. deletes all auth tokens for the user
+      tags:
+      - auth
+      responses:
+        '200':
+          description: No response body
+  /api/auth/users/:
+    get:
+      operationId: auth_users_list
+      description: Allows you to create a new user, view the list of users and the
+        number of their posts.
+      parameters:
+      - name: ordering
+        required: false
+        in: query
+        description: Which field to use when ordering the results.
+        schema:
+          type: string
+      tags:
+      - auth
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+          description: ''
+    post:
+      operationId: auth_users_create
+      description: Allows you to create a new user, view the list of users and the
+        number of their posts.
+      tags:
+      - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/User'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/User'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/User'
+        required: true
+      security:
+      - {}
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+  /api/blog/create/:
+    post:
+      operationId: blog_create_create
+      description: |-
+        Allows the user to create new posts.
+        Requires authentication.
+      tags:
+      - blog
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Post'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Post'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Post'
+        required: true
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+          description: ''
+  /api/blog/follow/:
+    get:
+      operationId: blog_follow_list
+      description: |-
+        Allows you to subscribe / unsubscribe to users, view the list of subscriptions.
+        Requires authentication.
+      tags:
+      - blog
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Following'
+          description: ''
+    post:
+      operationId: blog_follow_create
+      description: |-
+        Allows you to subscribe / unsubscribe to users, view the list of subscriptions.
+        Requires authentication.
+      tags:
+      - blog
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Following'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Following'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Following'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Following'
+          description: ''
+    delete:
+      operationId: blog_follow_destroy
+      description: In order to unsubscribe from a user, you must pass his id in the
+        request.
+      tags:
+      - blog
+      responses:
+        '204':
+          description: No response body
+  /api/blog/follow/{following_user}/:
+    get:
+      operationId: blog_follow_list_2
+      description: |-
+        Allows you to subscribe / unsubscribe to users, view the list of subscriptions.
+        Requires authentication.
+      parameters:
+      - in: path
+        name: following_user
+        schema:
+          type: integer
+        required: true
+      tags:
+      - blog
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Following'
+          description: ''
+    post:
+      operationId: blog_follow_create_2
+      description: |-
+        Allows you to subscribe / unsubscribe to users, view the list of subscriptions.
+        Requires authentication.
+      parameters:
+      - in: path
+        name: following_user
+        schema:
+          type: integer
+        required: true
+      tags:
+      - blog
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Following'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Following'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Following'
+        required: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Following'
+          description: ''
+    delete:
+      operationId: blog_follow_destroy_2
+      description: In order to unsubscribe from a user, you must pass his id in the
+        request.
+      parameters:
+      - in: path
+        name: following_user
+        schema:
+          type: integer
+        required: true
+      tags:
+      - blog
+      responses:
+        '204':
+          description: No response body
+  /api/blog/posts/{id}/:
+    get:
+      operationId: blog_posts_list
+      description: Allows you to view a list of other users posts.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - blog
+      security:
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Post'
+          description: ''
+  /api/blog/posts/feed/:
+    get:
+      operationId: blog_posts_feed_list
+      description: |-
+        Allows you to view the feed of posts.
+        You can filter the feed using the 'readed' parameter:
+            ?readed=true will display only read posts from the feed.
+            ?readed=false will only display unread messages from the feed.
+            if the parameter is not passed in the request, then all posts will be displayed.
+        Requires authentication.
+      parameters:
+      - name: page
+        required: false
+        in: query
+        description: A page number within the paginated result set.
+        schema:
+          type: integer
+      - name: page_size
+        required: false
+        in: query
+        description: Number of results to return per page.
+        schema:
+          type: integer
+      tags:
+      - blog
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaginatedPostList'
+          description: ''
+  /api/blog/posts/feed/{id}/:
+    get:
+      operationId: blog_posts_feed_retrieve
+      description: |-
+        Allows you to add posts to the "read" field of the feed.
+        If the post has already been added, displays information about the post.
+        Requires authentication.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - blog
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Post'
+          description: ''
+components:
+  schemas:
+    Following:
+      type: object
+      description: Displays information about the subscribed user and date of subscription.
+      properties:
+        follow_to:
+          allOf:
+          - $ref: '#/components/schemas/PostOwner'
+          readOnly: true
+        following_user:
+          type: integer
+          writeOnly: true
+        created:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created
+      - follow_to
+      - following_user
+    PaginatedPostList:
+      type: object
+      properties:
+        count:
+          type: integer
+          example: 123
+        next:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=4
+        previous:
+          type: string
+          nullable: true
+          format: uri
+          example: http://api.example.org/accounts/?page=2
+        results:
+          type: array
+          items:
+            $ref: '#/components/schemas/Post'
+    Post:
+      type: object
+      description: Displays information about the post and its owner.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        title:
+          type: string
+          maxLength: 255
+        text:
+          type: string
+        owner:
+          allOf:
+          - $ref: '#/components/schemas/PostOwner'
+          readOnly: true
+        date_create:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - date_create
+      - id
+      - owner
+      - text
+      - title
+    PostOwner:
+      type: object
+      description: Displays the "id" and "email" of the requested user.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        email:
+          type: string
+          format: email
+          maxLength: 254
+      required:
+      - email
+      - id
+    User:
+      type: object
+      description: |-
+        Displays information about the user, and also shows the number of his posts.
+        When creating a user, it validates the password.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        password:
+          type: string
+          writeOnly: true
+          maxLength: 128
+        posts_count:
+          type: integer
+          readOnly: true
+      required:
+      - email
+      - id
+      - password
+      - posts_count

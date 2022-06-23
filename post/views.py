@@ -40,10 +40,10 @@ class PostListAPIView(generics.ListAPIView):
             raise NotFound({'error': 'User not found'})
 
 
-class FollowListCreateAPIView(mixins.CreateModelMixin, mixins.ListModelMixin, mixins.DestroyModelMixin,
+class FollowListCreateAPIView(mixins.CreateModelMixin, mixins.ListModelMixin,
                               generics.GenericAPIView):
     """
-    Allows you to subscribe / unsubscribe to users, view the list of subscriptions.
+    Allows you to subscribe to users, view the list of subscriptions.
     Requires authentication.
     """
     serializer_class = FollowingSerializer
@@ -55,6 +55,9 @@ class FollowListCreateAPIView(mixins.CreateModelMixin, mixins.ListModelMixin, mi
             only('following_user__id', 'following_user__email', 'created')
 
     def post(self, request, *args, **kwargs):
+        """
+        Subscribe to user.
+        """
         feed_create_or_add(self)
         return self.create(request, *args, **kwargs)
 
@@ -65,12 +68,21 @@ class FollowListCreateAPIView(mixins.CreateModelMixin, mixins.ListModelMixin, mi
             raise ValidationError({'error': 'You are already follow this user'})
 
     def get(self, request, *args, **kwargs):
+        """
+        View the list of subscriptions.
+        """
         return self.list(request, *args, **kwargs)
 
+
+class UnfollowAPIView(mixins.DestroyModelMixin, generics.GenericAPIView):
+    """
+    Allows you to unsubscribe to users.
+    In order to unsubscribe from a user, you must pass his id in the request.
+    """
+    permission_classes = [IsAuthenticated]
+
     def delete(self, request, *args, **kwargs):
-        """
-        In order to unsubscribe from a user, you must pass his id in the request.
-        """
+
         try:
             feed_delete(self)
             return self.destroy(request, *args, **kwargs)

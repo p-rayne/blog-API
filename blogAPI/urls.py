@@ -15,9 +15,11 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from spectacular import urlpatterns as doc_url
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/auth/', include('account.urls')),
     path('api/blog/', include('post.urls')),
 ]
+urlpatterns += doc_url

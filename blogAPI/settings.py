@@ -43,7 +43,7 @@ INSTALLED_APPS = [
 
     'rest_framework',
     'knox',
-
+    'drf_spectacular',
     'account.apps.AccountConfig',
     'post.apps.PostConfig',
 ]
@@ -136,10 +136,18 @@ REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': ('rest_framework.renderers.JSONRenderer',),
     'DEFAULT_AUTHENTICATION_CLASSES': ('knox.auth.TokenAuthentication',),
     'TEST_REQUEST_DEFAULT_FORMAT': 'json',
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
 
 REST_KNOX = {
     'TOKEN_TTL': timedelta(hours=12),
     'TOKEN_LIMIT_PER_USER': 5,
     'AUTO_REFRESH': False,
+}
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'blog API',
+    'DESCRIPTION': 'Backend part for a blog as a service with REST API',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
 }
