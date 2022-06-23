@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError
+from drf_spectacular.utils import extend_schema_view, extend_schema, OpenApiParameter, OpenApiExample
 from rest_framework import generics, mixins
 from rest_framework.exceptions import NotFound, ValidationError
 from rest_framework.pagination import PageNumberPagination
@@ -74,6 +75,7 @@ class FollowListCreateAPIView(mixins.CreateModelMixin, mixins.ListModelMixin,
         return self.list(request, *args, **kwargs)
 
 
+@extend_schema_view(delete=extend_schema(responses=None))
 class UnfollowAPIView(mixins.DestroyModelMixin, generics.GenericAPIView):
     """
     Allows you to unsubscribe to users.
@@ -110,7 +112,7 @@ class PostsFeedListAPIView(mixins.ListModelMixin, generics.GenericAPIView):
     Allows you to view the feed of posts.
     You can filter the feed using the 'readed' parameter:
         ?readed=true will display only read posts from the feed.
-        ?readed=false will only display unread messages from the feed.
+        ?readed=false will only display unread posts from the feed.
         if the parameter is not passed in the request, then all posts will be displayed.
     Requires authentication.
     """
@@ -134,6 +136,34 @@ class PostsFeedListAPIView(mixins.ListModelMixin, generics.GenericAPIView):
                 only('id', 'title', 'text', 'date_create', 'owner__id', 'owner__email')
             return queryset
 
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(name='readed',
+                             description='Filtering already read posts',
+                             required=False,
+                             type=str,
+                             examples=[
+                                 OpenApiExample(
+                                     'Example 1',
+                                     summary='None',
+                                     description='All posts are displayed',
+                                 ),
+                                 OpenApiExample(
+                                     'Example 2',
+                                     summary='Already read',
+                                     description='Only posts that have been read are displayed',
+                                     value='true'
+                                 ),
+                                 OpenApiExample(
+                                     'Example 3',
+                                     summary='Unread',
+                                     description='Only unread posts are displayed',
+                                     value='false'
+                                 ),
+                             ],
+                             ),
+        ],
+    )
     def get(self, request, *args, **kwargs):
         feed_create_or_add(self)
         return self.list(request, *args, **kwargs)

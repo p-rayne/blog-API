@@ -147,7 +147,7 @@ REST_KNOX = {
 
 SPECTACULAR_SETTINGS = {
     'TITLE': 'blog API',
-    'DESCRIPTION': 'Backend part for a blog as a service with REST API',
+    'DESCRIPTION': 'Blog backend with REST API',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
 }

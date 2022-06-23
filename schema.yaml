@@ -11,16 +11,35 @@ paths:
         a token.
       tags:
       - auth
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CustomAuthToken'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/CustomAuthToken'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/CustomAuthToken'
+        required: true
       security:
+      - knoxTokenAuth: []
       - {}
       responses:
         '200':
-          description: No response body
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomAuthToken'
+          description: ''
   /api/auth/logout/:
     post:
       operationId: auth_logout_create
       tags:
       - auth
+      security:
+      - knoxTokenAuth: []
       responses:
         '200':
           description: No response body
@@ -32,24 +51,37 @@ paths:
         I.E. deletes all auth tokens for the user
       tags:
       - auth
+      security:
+      - knoxTokenAuth: []
       responses:
         '200':
           description: No response body
   /api/auth/users/:
     get:
       operationId: auth_users_list
-      description: Allows you to create a new user, view the list of users and the
-        number of their posts.
+      description: View the list of users and the number of their posts.
       parameters:
-      - name: ordering
-        required: false
-        in: query
-        description: Which field to use when ordering the results.
+      - in: query
+        name: ordering
         schema:
           type: string
+        description: Sort users by number of posts
+        examples:
+          Example1:
+            summary: None
+            description: not sorted
+          Example2:
+            value: posts_count
+            summary: ascending
+            description: Sort by number of posts in ascending order
+          Example3:
+            value: -posts_count
+            summary: descending
+            description: Sort by number of posts in descending order
       tags:
       - auth
       security:
+      - knoxTokenAuth: []
       - {}
       responses:
         '200':
@@ -62,8 +94,7 @@ paths:
           description: ''
     post:
       operationId: auth_users_create
-      description: Allows you to create a new user, view the list of users and the
-        number of their posts.
+      description: Create a new user.
       tags:
       - auth
       requestBody:
@@ -79,6 +110,7 @@ paths:
               $ref: '#/components/schemas/User'
         required: true
       security:
+      - knoxTokenAuth: []
       - {}
       responses:
         '201':
@@ -86,6 +118,12 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
+              examples:
+                Example1:
+                  value:
+                    id: 1
+                    email: user@example.com
+                  summary: created
           description: ''
   /api/blog/create/:
     post:
@@ -107,6 +145,8 @@ paths:
             schema:
               $ref: '#/components/schemas/Post'
         required: true
+      security:
+      - knoxTokenAuth: []
       responses:
         '201':
           content:
@@ -117,11 +157,11 @@ paths:
   /api/blog/follow/:
     get:
       operationId: blog_follow_list
-      description: |-
-        Allows you to subscribe / unsubscribe to users, view the list of subscriptions.
-        Requires authentication.
+      description: View the list of subscriptions.
       tags:
       - blog
+      security:
+      - knoxTokenAuth: []
       responses:
         '200':
           content:
@@ -133,9 +173,7 @@ paths:
           description: ''
     post:
       operationId: blog_follow_create
-      description: |-
-        Allows you to subscribe / unsubscribe to users, view the list of subscriptions.
-        Requires authentication.
+      description: Subscribe to user.
       tags:
       - blog
       requestBody:
@@ -150,6 +188,8 @@ paths:
             schema:
               $ref: '#/components/schemas/Following'
         required: true
+      security:
+      - knoxTokenAuth: []
       responses:
         '200':
           content:
@@ -157,21 +197,12 @@ paths:
               schema:
                 $ref: '#/components/schemas/Following'
           description: ''
+  /api/blog/follow/{following_user}/:
     delete:
       operationId: blog_follow_destroy
-      description: In order to unsubscribe from a user, you must pass his id in the
-        request.
-      tags:
-      - blog
-      responses:
-        '204':
-          description: No response body
-  /api/blog/follow/{following_user}/:
-    get:
-      operationId: blog_follow_list_2
       description: |-
-        Allows you to subscribe / unsubscribe to users, view the list of subscriptions.
-        Requires authentication.
+        Allows you to unsubscribe to users.
+        In order to unsubscribe from a user, you must pass his id in the request.
       parameters:
       - in: path
         name: following_user
@@ -180,59 +211,8 @@ paths:
         required: true
       tags:
       - blog
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Following'
-          description: ''
-    post:
-      operationId: blog_follow_create_2
-      description: |-
-        Allows you to subscribe / unsubscribe to users, view the list of subscriptions.
-        Requires authentication.
-      parameters:
-      - in: path
-        name: following_user
-        schema:
-          type: integer
-        required: true
-      tags:
-      - blog
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Following'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/Following'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/Following'
-        required: true
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Following'
-          description: ''
-    delete:
-      operationId: blog_follow_destroy_2
-      description: In order to unsubscribe from a user, you must pass his id in the
-        request.
-      parameters:
-      - in: path
-        name: following_user
-        schema:
-          type: integer
-        required: true
-      tags:
-      - blog
+      security:
+      - knoxTokenAuth: []
       responses:
         '204':
           description: No response body
@@ -249,6 +229,7 @@ paths:
       tags:
       - blog
       security:
+      - knoxTokenAuth: []
       - {}
       responses:
         '200':
@@ -266,7 +247,7 @@ paths:
         Allows you to view the feed of posts.
         You can filter the feed using the 'readed' parameter:
             ?readed=true will display only read posts from the feed.
-            ?readed=false will only display unread messages from the feed.
+            ?readed=false will only display unread posts from the feed.
             if the parameter is not passed in the request, then all posts will be displayed.
         Requires authentication.
       parameters:
@@ -282,8 +263,27 @@ paths:
         description: Number of results to return per page.
         schema:
           type: integer
+      - in: query
+        name: readed
+        schema:
+          type: string
+        description: Filtering already read posts
+        examples:
+          Example1:
+            summary: None
+            description: All posts are displayed
+          Example2:
+            value: 'true'
+            summary: Already read
+            description: Only posts that have been read are displayed
+          Example3:
+            value: 'false'
+            summary: Unread
+            description: Only unread posts are displayed
       tags:
       - blog
+      security:
+      - knoxTokenAuth: []
       responses:
         '200':
           content:
@@ -306,6 +306,8 @@ paths:
         required: true
       tags:
       - blog
+      security:
+      - knoxTokenAuth: []
       responses:
         '200':
           content:
@@ -315,6 +317,28 @@ paths:
           description: ''
 components:
   schemas:
+    CustomAuthToken:
+      type: object
+      description: Upon successful validation, returns a token to the user.
+      properties:
+        email:
+          type: string
+          writeOnly: true
+        password:
+          type: string
+          writeOnly: true
+        expiry:
+          type: string
+          format: date-time
+          readOnly: true
+        token:
+          type: string
+          readOnly: true
+      required:
+      - email
+      - expiry
+      - password
+      - token
     Following:
       type: object
       description: Displays information about the subscribed user and date of subscription.
@@ -419,3 +443,9 @@ components:
       - id
       - password
       - posts_count
+  securitySchemes:
+    knoxTokenAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      description: Token-based authentication with required prefix "Token"
