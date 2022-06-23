@@ -36,3 +36,5 @@ Now you can run tests or view API documentation.
 ## About the project
 Documentation is available at http://127.0.0.1:8000/api/schema/swagger-ui/  or in the schema.yml  
 The task can be viewed in the *Task_Backend.pdf* file.
+
+- [x] All items of the task have been implemented.  
