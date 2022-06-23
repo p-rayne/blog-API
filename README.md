@@ -30,7 +30,7 @@ Now you can run tests or view API documentation.
 + To run tests:
   > python manage.py test  
 + To see the API documentation:
-  > python manage.py runsserver  
+  > python manage.py runserver  
   > go to: http://127.0.0.1:8000/api/schema/swagger-ui/  
 
 ## About the project
