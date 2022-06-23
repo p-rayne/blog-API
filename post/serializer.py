@@ -6,10 +6,24 @@ from post.models import Post, UserFollowing
 UserModel = get_user_model()
 
 
+class UserListSerializer(serializers.ModelSerializer):
+    """
+    Displays information about the user, and also shows the number of his posts.
+    """
+    posts_count = serializers.IntegerField(read_only=True)
+
+    class Meta:
+        model = UserModel
+        fields = (
+            'id', 'email', 'posts_count',
+        )
+
+
 class PostOwnerSerializer(serializers.ModelSerializer):
     """
     Displays the "id" and "email" of the requested user.
     """
+
     class Meta:
         model = UserModel
         fields = ('id', 'email')

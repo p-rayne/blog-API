@@ -1,17 +1,66 @@
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import IntegrityError
+from django.db.models import Count
 from drf_spectacular.utils import extend_schema_view, extend_schema, OpenApiParameter, OpenApiExample
 from rest_framework import generics, mixins
 from rest_framework.exceptions import NotFound, ValidationError
+from rest_framework.filters import OrderingFilter
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.permissions import IsAuthenticated, AllowAny
 
 from post.models import Post, UserFollowing, UserFeed
-from post.serializer import PostSerializer, FollowingSerializer
+from post.serializer import PostSerializer, FollowingSerializer, UserListSerializer
 from post.utils import feed_create_or_add, feed_delete
 
 UserModel = get_user_model()
+
+
+class UsersListAPIView(mixins.ListModelMixin, generics.GenericAPIView):
+    """
+    View the list of users and the number of their posts.
+    """
+    queryset = UserModel.objects.all().only('id', 'email').annotate(
+        posts_count=Count('posts')
+    )
+    serializer_class = UserListSerializer
+    permission_classes = [AllowAny]
+    filter_backends = (OrderingFilter,)
+    ordering_fields = ('posts_count',)
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(name='ordering',
+                             description='Sort users by number of posts',
+                             required=False,
+                             type=str,
+                             examples=[
+                                 OpenApiExample(
+                                     'Example 1',
+                                     summary='None',
+                                     description='not sorted',
+                                 ),
+                                 OpenApiExample(
+                                     'Example 2',
+                                     summary='ascending',
+                                     description='Sort by number of posts in ascending order',
+                                     value='posts_count'
+                                 ),
+                                 OpenApiExample(
+                                     'Example 3',
+                                     summary='descending',
+                                     description='Sort by number of posts in descending order',
+                                     value='-posts_count'
+                                 ),
+                             ],
+                             ),
+        ],
+    )
+    def get(self, request, *args, **kwargs):
+        """
+        View the list of users and the number of their posts.
+        """
+        return self.list(request, *args, **kwargs)
 
 
 class PostCreateAPIView(generics.CreateAPIView):

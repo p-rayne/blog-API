@@ -2,12 +2,14 @@ import json
 from time import sleep
 
 from django.contrib.auth import get_user_model
+from django.db.models import Count
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.exceptions import ErrorDetail
 from rest_framework.test import APITestCase
 
 from post.models import Post, UserFollowing, UserFeed
+from post.serializer import UserListSerializer
 
 UserModel = get_user_model()
 
@@ -395,3 +397,58 @@ class PostFeedRetrieveAPIViewAPITestCase(APITestCase):
         self.assertEqual(status.HTTP_200_OK, response.status_code)
         self.assertEqual(1, UserFeed.objects.get().read.count())
         self.assertEqual(Post.objects.get(owner=self.user2), UserFeed.objects.get().read.last())
+
+
+class UsersListAPIViewAPITestCase(APITestCase):
+    def setUp(self):
+        self.email = 'john.doe@example.com'
+        self.password = '123456super'
+        self.user = UserModel.objects.create_user(self.email, self.password)
+
+        self.email2 = 'jane.doe@example.com'
+        self.password2 = '123456super'
+        self.user2 = UserModel.objects.create_user(self.email2, self.password2)
+
+    def test_get(self):
+        users = UserModel.objects.all().annotate(
+            posts_count=Count('posts')
+        )
+        url = reverse('users_list')
+        response = self.client.get(url)
+        serializer_data = UserListSerializer(users, many=True).data
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        self.assertEqual(serializer_data, response.data)
+
+    def test_posts_count(self):
+        users = UserModel.objects.all().annotate(
+            posts_count=Count('posts')
+        )
+        self.assertEqual(0, self.user.posts.count())
+        url = reverse('users_list')
+        self.user.posts.create(title='title for test post', text='text for test post')
+        response = self.client.get(url)
+        serializer_data = UserListSerializer(users, many=True).data
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        self.assertEqual(serializer_data, response.data)
+        self.assertEqual(1, self.user.posts.count())
+
+    def test_posts_ordering(self):
+        url = reverse('users_list')
+        for i in range(1, 4):
+            self.user.posts.create(title=f'title for test post{i}', text=f'text for test post{i}')
+        self.user2.posts.create(title='title for test post', text='text for test post')
+        response = self.client.get(url, {'ordering': '-posts_count'})
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        dct = json.loads(response.content)
+        self.assertEqual(2, len(dct))
+        self.assertEqual(self.user.pk, dct[0]['id'])
+        self.assertEqual(self.user2.pk, dct[1]['id'])
+        self.assertEqual(3, self.user.posts.count())
+
+        response = self.client.get(url, {'ordering': 'posts_count'})
+        self.assertEqual(status.HTTP_200_OK, response.status_code)
+        dct = json.loads(response.content)
+        self.assertEqual(2, len(dct))
+        self.assertEqual(self.user2.pk, dct[0]['id'])
+        self.assertEqual(self.user.pk, dct[1]['id'])
+        self.assertEqual(1, self.user2.posts.count())
