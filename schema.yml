@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: blog API
   version: 1.0.0
-  description: Backend part for a blog as a service with REST API
+  description: Blog backend with REST API
 paths:
   /api/auth/login/:
     post:
@@ -56,44 +56,9 @@ paths:
       responses:
         '200':
           description: No response body
-  /api/auth/users/:
-    get:
-      operationId: auth_users_list
-      description: View the list of users and the number of their posts.
-      parameters:
-      - in: query
-        name: ordering
-        schema:
-          type: string
-        description: Sort users by number of posts
-        examples:
-          Example1:
-            summary: None
-            description: not sorted
-          Example2:
-            value: posts_count
-            summary: ascending
-            description: Sort by number of posts in ascending order
-          Example3:
-            value: -posts_count
-            summary: descending
-            description: Sort by number of posts in descending order
-      tags:
-      - auth
-      security:
-      - knoxTokenAuth: []
-      - {}
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/User'
-          description: ''
+  /api/auth/user/:
     post:
-      operationId: auth_users_create
+      operationId: auth_user_create
       description: Create a new user.
       tags:
       - auth
@@ -118,12 +83,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/User'
-              examples:
-                Example1:
-                  value:
-                    id: 1
-                    email: user@example.com
-                  summary: created
           description: ''
   /api/blog/create/:
     post:
@@ -154,95 +113,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/Post'
           description: ''
-  /api/blog/follow/:
+  /api/blog/feed/:
     get:
-      operationId: blog_follow_list
-      description: View the list of subscriptions.
-      tags:
-      - blog
-      security:
-      - knoxTokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Following'
-          description: ''
-    post:
-      operationId: blog_follow_create
-      description: Subscribe to user.
-      tags:
-      - blog
-      requestBody:
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Following'
-          application/x-www-form-urlencoded:
-            schema:
-              $ref: '#/components/schemas/Following'
-          multipart/form-data:
-            schema:
-              $ref: '#/components/schemas/Following'
-        required: true
-      security:
-      - knoxTokenAuth: []
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/Following'
-          description: ''
-  /api/blog/follow/{following_user}/:
-    delete:
-      operationId: blog_follow_destroy
-      description: |-
-        Allows you to unsubscribe to users.
-        In order to unsubscribe from a user, you must pass his id in the request.
-      parameters:
-      - in: path
-        name: following_user
-        schema:
-          type: integer
-        required: true
-      tags:
-      - blog
-      security:
-      - knoxTokenAuth: []
-      responses:
-        '204':
-          description: No response body
-  /api/blog/posts/{id}/:
-    get:
-      operationId: blog_posts_list
-      description: Allows you to view a list of other users posts.
-      parameters:
-      - in: path
-        name: id
-        schema:
-          type: integer
-        required: true
-      tags:
-      - blog
-      security:
-      - knoxTokenAuth: []
-      - {}
-      responses:
-        '200':
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Post'
-          description: ''
-  /api/blog/posts/feed/:
-    get:
-      operationId: blog_posts_feed_list
+      operationId: blog_feed_list
       description: |-
         Allows you to view the feed of posts.
         You can filter the feed using the 'readed' parameter:
@@ -291,9 +164,9 @@ paths:
               schema:
                 $ref: '#/components/schemas/PaginatedPostList'
           description: ''
-  /api/blog/posts/feed/{id}/:
+  /api/blog/feed/{id}/:
     get:
-      operationId: blog_posts_feed_retrieve
+      operationId: blog_feed_retrieve
       description: |-
         Allows you to add posts to the "read" field of the feed.
         If the post has already been added, displays information about the post.
@@ -314,6 +187,128 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Post'
+          description: ''
+  /api/blog/follow/:
+    get:
+      operationId: blog_follow_list
+      description: View the list of subscriptions.
+      tags:
+      - blog
+      security:
+      - knoxTokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Following'
+          description: ''
+    post:
+      operationId: blog_follow_create
+      description: Subscribe to user.
+      tags:
+      - blog
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Following'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/Following'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/Following'
+        required: true
+      security:
+      - knoxTokenAuth: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Following'
+          description: ''
+  /api/blog/posts/{id}/:
+    get:
+      operationId: blog_posts_list
+      description: Allows you to view a list of other users posts.
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: integer
+        required: true
+      tags:
+      - blog
+      security:
+      - knoxTokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Post'
+          description: ''
+  /api/blog/unfollow/{following_user}/:
+    delete:
+      operationId: blog_unfollow_destroy
+      description: |-
+        Allows you to unsubscribe to users.
+        In order to unsubscribe from a user, you must pass his id in the request.
+      parameters:
+      - in: path
+        name: following_user
+        schema:
+          type: integer
+        required: true
+      tags:
+      - blog
+      security:
+      - knoxTokenAuth: []
+      responses:
+        '204':
+          description: No response body
+  /api/blog/users/:
+    get:
+      operationId: blog_users_list
+      description: View the list of users and the number of their posts.
+      parameters:
+      - in: query
+        name: ordering
+        schema:
+          type: string
+        description: Sort users by number of posts
+        examples:
+          Example1:
+            summary: None
+            description: not sorted
+          Example2:
+            value: posts_count
+            summary: ascending
+            description: Sort by number of posts in ascending order
+          Example3:
+            value: -posts_count
+            summary: descending
+            description: Sort by number of posts in descending order
+      tags:
+      - blog
+      security:
+      - knoxTokenAuth: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/UserList'
           description: ''
 components:
   schemas:
@@ -420,9 +415,7 @@ components:
       - id
     User:
       type: object
-      description: |-
-        Displays information about the user, and also shows the number of his posts.
-        When creating a user, it validates the password.
+      description: Create user.
       properties:
         id:
           type: integer
@@ -435,13 +428,28 @@ components:
           type: string
           writeOnly: true
           maxLength: 128
+      required:
+      - email
+      - id
+      - password
+    UserList:
+      type: object
+      description: Displays information about the user, and also shows the number
+        of his posts.
+      properties:
+        id:
+          type: integer
+          readOnly: true
+        email:
+          type: string
+          format: email
+          maxLength: 254
         posts_count:
           type: integer
           readOnly: true
       required:
       - email
       - id
-      - password
       - posts_count
   securitySchemes:
     knoxTokenAuth:

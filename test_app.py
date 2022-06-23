@@ -34,7 +34,7 @@ class BlogAPITestCase(APITestCase):
     def test_blogAPI(self):
         email = 'user@example.com'
         # Create new user.
-        url = reverse('users')
+        url = reverse('user_create')
         data = {
             'email': email,
             'password': '123456super'}
@@ -67,7 +67,7 @@ class BlogAPITestCase(APITestCase):
         self.assertEqual(status.HTTP_201_CREATED, response.status_code)
 
         #  Getting a list of users.
-        url = reverse('users')
+        url = reverse('users_list')
         response = self.client.get(url)
         self.assertEqual(status.HTTP_200_OK, response.status_code)
 

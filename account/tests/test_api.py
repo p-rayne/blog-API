@@ -22,52 +22,8 @@ class UserListCreateAPITestCase(APITestCase):
         self.password2 = '123456super'
         self.user2 = UserModel.objects.create_user(self.email2, self.password2)
 
-    def test_get(self):
-        users = UserModel.objects.all().annotate(
-            posts_count=Count('posts')
-        )
-        url = reverse('users')
-        response = self.client.get(url)
-        serializer_data = UserSerializer(users, many=True).data
-        self.assertEqual(status.HTTP_200_OK, response.status_code)
-        self.assertEqual(serializer_data, response.data)
-
-    def test_posts_count(self):
-        users = UserModel.objects.all().annotate(
-            posts_count=Count('posts')
-        )
-        self.assertEqual(0, self.user.posts.count())
-        url = reverse('users')
-        self.user.posts.create(title='title for test post', text='text for test post')
-        response = self.client.get(url)
-        serializer_data = UserSerializer(users, many=True).data
-        self.assertEqual(status.HTTP_200_OK, response.status_code)
-        self.assertEqual(serializer_data, response.data)
-        self.assertEqual(1, self.user.posts.count())
-
-    def test_posts_ordering(self):
-        url = reverse('users')
-        for i in range(1, 4):
-            self.user.posts.create(title=f'title for test post{i}', text=f'text for test post{i}')
-        self.user2.posts.create(title='title for test post', text='text for test post')
-        response = self.client.get(url, {'ordering': '-posts_count'})
-        self.assertEqual(status.HTTP_200_OK, response.status_code)
-        dct = json.loads(response.content)
-        self.assertEqual(2, len(dct))
-        self.assertEqual(self.user.pk, dct[0]['id'])
-        self.assertEqual(self.user2.pk, dct[1]['id'])
-        self.assertEqual(3, self.user.posts.count())
-
-        response = self.client.get(url, {'ordering': 'posts_count'})
-        self.assertEqual(status.HTTP_200_OK, response.status_code)
-        dct = json.loads(response.content)
-        self.assertEqual(2, len(dct))
-        self.assertEqual(self.user2.pk, dct[0]['id'])
-        self.assertEqual(self.user.pk, dct[1]['id'])
-        self.assertEqual(1, self.user2.posts.count())
-
     def test_create_user(self):
-        url = reverse('users')
+        url = reverse('user_create')
         data = {'email': 'jax.doe@example.com', 'password': '123456super'}
         json_data = json.dumps(data)
         response = self.client.post(url, data=json_data,
@@ -77,7 +33,7 @@ class UserListCreateAPITestCase(APITestCase):
         self.assertEqual('jax.doe@example.com', UserModel.objects.last().email)
 
     def test_email_invalid(self):
-        url = reverse('users')
+        url = reverse('user_create')
         data = {'email': 'invalid', 'password': '123456super'}
         json_data = json.dumps(data)
         response = self.client.post(url, data=json_data,
@@ -85,7 +41,7 @@ class UserListCreateAPITestCase(APITestCase):
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
 
     def test_email_empty(self):
-        url = reverse('users')
+        url = reverse('user_create')
         data = {'email': '', 'password': '123456super'}
         json_data = json.dumps(data)
         response = self.client.post(url, data=json_data,
@@ -93,7 +49,7 @@ class UserListCreateAPITestCase(APITestCase):
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
 
     def test_password_short(self):
-        url = reverse('users')
+        url = reverse('user_create')
         data = {'email': 'john.doe@example.com', 'password': 'abc12'}
         json_data = json.dumps(data)
         response = self.client.post(url, data=json_data,
@@ -101,7 +57,7 @@ class UserListCreateAPITestCase(APITestCase):
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
 
     def test_password_empty(self):
-        url = reverse('users')
+        url = reverse('user_create')
         data = {'email': 'john.doe@example.com', 'password': ''}
         json_data = json.dumps(data)
         response = self.client.post(url, data=json_data,
@@ -109,7 +65,7 @@ class UserListCreateAPITestCase(APITestCase):
         self.assertEqual(status.HTTP_400_BAD_REQUEST, response.status_code)
 
     def test_password_numeric_only(self):
-        url = reverse('users')
+        url = reverse('user_create')
         data = {'email': 'john.doe@example.com', 'password': 123456789}
         json_data = json.dumps(data)
         response = self.client.post(url, data=json_data,

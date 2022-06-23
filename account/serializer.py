@@ -8,15 +8,13 @@ UserModel = get_user_model()
 
 class UserSerializer(serializers.ModelSerializer):
     """
-    Displays information about the user, and also shows the number of his posts.
-    When creating a user, it validates the password.
+    Create user.
     """
-    posts_count = serializers.IntegerField(read_only=True)
 
     class Meta:
         model = UserModel
         fields = (
-            'id', 'email', 'password', 'posts_count',
+            'id', 'email', 'password',
         )
         extra_kwargs = {
             'password': {'write_only': True},
