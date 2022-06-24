@@ -18,13 +18,16 @@ Blog backend with REST API for a test task.
 
 
   > *Please do not forget to change the value from "Your\*" to the ones you need.*  
-+ In the root directory create a virtual environment named .venv and activate it.
++ In the blog-API directory create a virtual environment named .venv and activate it.
   > for Linux: 
   > sudo apt-get install python3-venv    *# If needed*  
   > python3 -m venv .venv  
   > source .venv/bin/activate  
 + Install dependencies
   > pip install -r requirements.txt  
++ Create migrations
+  > python manage.py makemigrations  
+  > python manage.py migrate
 
 Now you can run tests or view API documentation.
 + To run tests:
@@ -35,6 +38,6 @@ Now you can run tests or view API documentation.
 
 ## About the project
 Documentation is available at http://127.0.0.1:8000/api/schema/swagger-ui/  or in the schema.yml  
-The task can be viewed in the *Task_Backend.pdf* file.
+The tasks can be viewed in the *Task_Backend.pdf* file.
 
-- [x] All items of the task have been implemented.  
+- [x] All tasks completed. 
